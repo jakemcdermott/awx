@@ -168,6 +168,11 @@ class WorkflowNodeBase(CreatedModifiedModel):
 
 
 class WorkflowJobTemplateNode(WorkflowNodeBase):
+    FIELDS_TO_PRESERVE_AT_COPY = [
+        'unified_job_template', 'inventory', 'credential', 'workflow_job_template',
+        'success_nodes', 'failure_nodes', 'always_nodes'
+    ]
+
     workflow_job_template = models.ForeignKey(
         'WorkflowJobTemplate',
         related_name='workflow_job_template_nodes',
@@ -329,6 +334,9 @@ class WorkflowJobOptions(BaseModel):
 class WorkflowJobTemplate(UnifiedJobTemplate, WorkflowJobOptions, SurveyJobTemplateMixin, ResourceMixin):
 
     SOFT_UNIQUE_TOGETHER = [('polymorphic_ctype', 'name', 'organization')]
+    FIELDS_TO_PRESERVE_AT_COPY = [
+        'labels', 'instance_groups', 'workflow_job_template_nodes', 'organization', 'credentials'
+    ]
 
     class Meta:
         app_label = 'main'
@@ -364,13 +372,6 @@ class WorkflowJobTemplate(UnifiedJobTemplate, WorkflowJobOptions, SurveyJobTempl
     def _get_unified_job_field_names(cls):
         return ['name', 'description', 'extra_vars', 'labels', 'survey_passwords',
                 'schedule', 'launch_type', 'allow_simultaneous']
-
-    @classmethod
-    def _get_unified_jt_copy_names(cls):
-        base_list = super(WorkflowJobTemplate, cls)._get_unified_jt_copy_names()
-        base_list.remove('labels')
-        return (base_list +
-                ['survey_spec', 'survey_enabled', 'organization'])
 
     def get_absolute_url(self, request=None):
         return reverse('api:workflow_job_template_detail', kwargs={'pk': self.pk}, request=request)
@@ -435,11 +436,6 @@ class WorkflowJobTemplate(UnifiedJobTemplate, WorkflowJobOptions, SurveyJobTempl
             if node_prompts_warnings:
                 node_list.append(node.pk)
         return node_list
-
-    def user_copy(self, user):
-        new_wfjt = self.copy_unified_jt()
-        new_wfjt.copy_nodes_from_original(original=self, user=user)
-        return new_wfjt
 
 
 class WorkflowJob(UnifiedJob, WorkflowJobOptions, SurveyJobMixin, JobNotificationMixin):

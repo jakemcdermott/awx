@@ -369,26 +369,6 @@ class UnifiedJobTemplate(PolymorphicModel, CommonModelNameNotUnique, Notificatio
             copy_m2m_relationships(self, unified_job, fields, kwargs=kwargs)
         return unified_job
 
-    @classmethod
-    def _get_unified_jt_copy_names(cls):
-        return cls._get_unified_job_field_names()
-
-    def copy_unified_jt(self):
-        '''
-        Returns saved object, including related fields.
-        Create a copy of this unified job template.
-        '''
-        unified_jt_class = self.__class__
-        fields = self._get_unified_jt_copy_names()
-        unified_jt = copy_model_by_class(self, unified_jt_class, fields, {})
-
-        time_now = now()
-        unified_jt.name = unified_jt.name.split('@', 1)[0] + ' @ ' + time_now.strftime('%I:%M:%S %p')
-
-        unified_jt.save()
-        copy_m2m_relationships(self, unified_jt, fields)
-        return unified_jt
-
 
 class UnifiedJobTypeStringMixin(object):
     @classmethod
