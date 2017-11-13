@@ -64,15 +64,48 @@ function EditCredentialsController (models, $state, $scope, strings) {
     vm.form.credential_type._displayValue = credentialType.get('name');
     vm.form.credential_type._placeholder = strings.get('inputs.CREDENTIAL_TYPE_PLACEHOLDER');
 
+    const gceFileInputSchema = {
+        id: 'gce_service_account_key',
+        type: 'file',
+        label: 'Service Account Key JSON File',
+        help_text: 'help text'
+    };
+
+    const gceFileInputMapping = {
+        project_id: 'project',
+        client_email: 'username',
+        private_key: 'ssh_key_data'
+    };
+
+    const createDefaultGCEInputGroup = () => ({ [gceFileInputSchema.id]: {} });
+    const gceIsSelected = () => credentialType.get('name') === 'Google Compute Engine';
+    const getGCEFileInputValue = () => vm.gceInputGroup[gceFileInputSchema.id]._value;
+
     vm.form.inputs = {
         _get () {
+            let fields;
+
             credentialType.mergeInputProperties();
 
             if (credentialType.get('id') === credential.get('credential_type')) {
-                return credential.assignInputGroupValues(credentialType.get('inputs.fields'));
+                fields = credential.assignInputGroupValues(credentialType.get('inputs.fields'));
+            } else {
+                fields = credentialType.get('inputs.fields');
             }
 
-            return credentialType.get('inputs.fields');
+            if (gceIsSelected()) {
+                fields.splice(2, 0, gceFileInputSchema);
+                $scope.$watch(getGCEFileInputValue, vm.onGCEFileInputChanged);
+            }
+            return fields;
+        },
+        _onUpdate: group => {
+            const gceInputGroup = createDefaultGCEInputGroup();
+
+            if (gceIsSelected()) {
+                group.forEach(input => { gceInputGroup[input.id] = input; });
+            }
+            vm.gceInputGroup = gceInputGroup;
         },
         _source: vm.form.credential_type,
         _reference: 'vm.form.inputs',
@@ -88,11 +121,93 @@ function EditCredentialsController (models, $state, $scope, strings) {
         data.user = me.get('id');
         credential.unset('inputs');
 
+        delete data.inputs[gceFileInputSchema.id];
+
         return credential.request('put', { data });
     };
 
     vm.form.onSaveSuccess = () => {
         $state.go('credentials.edit', { credential_id: credential.get('id') }, { reload: true });
+    };
+
+    vm.onGCEFileInputChanged = value => {
+        if (!value) {
+            vm.unsetGCEFileInput();
+            return;
+        }
+
+        const { obj, error } = vm.parseGCEFile(value);
+
+        if (error) {
+            vm.setInvalidGCEFileInput('invalid');
+            return;
+        }
+
+        if (!vm.gceFileHasRequiredFields(obj)) {
+            vm.setInvalidGCEFileInput('missing');
+            return;
+        }
+
+        vm.setGCEFileInput(obj);
+    };
+
+    vm.gceFileHasRequiredFields = obj => Object.keys(gceFileInputMapping)
+        .filter(key => vm.gceInputGroup[gceFileInputMapping[key]].required)
+        .every(key => Object.prototype.hasOwnProperty.call(obj, key));
+
+    vm.setGCEFileInput = obj => {
+        vm.gceInputGroup.project._disabled = true;
+        vm.gceInputGroup.username._disabled = true;
+        vm.gceInputGroup.ssh_key_data._disabled = true;
+
+        vm.gceInputGroup.project._value = obj.project_id;
+        vm.gceInputGroup.username._value = obj.client_email;
+        vm.gceInputGroup.ssh_key_data._value = obj.private_key;
+
+        vm.gceInputGroup[gceFileInputSchema.id]._isValid = true;
+        vm.gceInputGroup[gceFileInputSchema.id]._rejected = false;
+        vm.gceInputGroup[gceFileInputSchema.id]._message = '';
+    };
+
+    vm.setInvalidGCEFileInput = message => {
+        vm.gceInputGroup.project._disabled = true;
+        vm.gceInputGroup.username._disabled = true;
+        vm.gceInputGroup.ssh_key_data._disabled = true;
+
+        vm.gceInputGroup.project._value = '';
+        vm.gceInputGroup.username._value = '';
+        vm.gceInputGroup.ssh_key_data._value = '';
+
+        vm.gceInputGroup[gceFileInputSchema.id]._isValid = false;
+        vm.gceInputGroup[gceFileInputSchema.id]._rejected = true;
+        vm.gceInputGroup[gceFileInputSchema.id]._message = message;
+    };
+
+    vm.unsetGCEFileInput = () => {
+        vm.gceInputGroup.project._value = '';
+        vm.gceInputGroup.username._value = '';
+        vm.gceInputGroup.ssh_key_data._value = '';
+
+        vm.gceInputGroup[gceFileInputSchema.id]._isValid = true;
+        vm.gceInputGroup[gceFileInputSchema.id]._rejected = false;
+        vm.gceInputGroup[gceFileInputSchema.id]._message = '';
+
+        vm.gceInputGroup.project._disabled = false;
+        vm.gceInputGroup.username._disabled = false;
+        vm.gceInputGroup.ssh_key_data._disabled = false;
+    };
+
+    vm.parseGCEFile = value => {
+        let obj;
+        let error;
+
+        try {
+            obj = angular.fromJson(value);
+        } catch (err) {
+            error = err;
+        }
+
+        return { obj, error };
     };
 }
 

@@ -50,7 +50,9 @@ function AtInputGroupController ($scope, $compile) {
         const group = vm.createComponentConfigs(inputs);
 
         vm.insert(group);
+
         state._group = group;
+        state._onUpdate(group);
     };
 
     vm.createComponentConfigs = inputs => {
@@ -99,6 +101,8 @@ function AtInputGroupController ($scope, $compile) {
             config._component = 'at-input-number';
         } else if (input.type === 'boolean') {
             config._component = 'at-input-checkbox';
+        } else if (input.type === 'file') {
+            config._component = 'at-input-file';
         } else if (input.choices) {
             config._component = 'at-input-select';
             config._format = 'array';
@@ -145,7 +149,6 @@ function AtInputGroupController ($scope, $compile) {
         const component = angular.element(`<${input._component} col="${col}" tab="${tabindex}"
                 state="${state._reference}._group[${index}]">
             </${input._component}>`);
-
         $compile(component)(scope.$parent);
 
         return component;

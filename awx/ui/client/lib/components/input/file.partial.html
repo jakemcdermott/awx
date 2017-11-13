@@ -1,0 +1,24 @@
+<div class="col-sm-{{::col}} at-InputContainer">
+    <div class="form-group at-u-flat">
+       <at-input-label></at-input-label>
+        <input class="at-InputFile--hidden" type="file"/>
+            <div class="input-group">
+                <span class="input-group-btn">
+                    <button class="btn at-ButtonHollow--white at-Input-button--fixed-sm"
+                            ng-disabled="state._disabled || form.disabled"
+                            ng-click="vm.onButtonClick()">
+                        {{ state._buttonText }}
+                    </button>
+                </span>
+                <input type="text"
+                   class="form-control at-Input"
+                   name="fileName",
+                   ng-class="{ 'at-Input--rejected': state._rejected }"
+                   ng-model="state._displayValue"
+                   ng-attr-tabindex="{{ tab || undefined }}"
+                   ng-attr-placeholder="{{::state._placeholder || undefined }}"
+                   ng-disabled="state._disabled || form.disabled" />
+            </div>
+        <at-input-message></at-input-message>
+    </div>
+</div>
