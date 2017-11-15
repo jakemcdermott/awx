@@ -1,6 +1,9 @@
+process.env.CHROME_BIN = require('puppeteer').executablePath();
+
 const path = require('path');
 
 const SRC_PATH = path.resolve(__dirname, '../../client/src');
+const NODE_MODULES = path.resolve(__dirname, '../../node_modules');
 
 const webpackConfig = require('./webpack.unit');
 
@@ -11,7 +14,7 @@ module.exports = config => {
         autoWatch: false,
         colors: true,
         frameworks: ['jasmine'],
-        browsers: ['PhantomJS'],
+        browsers: ['ChromeHeadless'],
         reporters: ['progress', 'junit'],
         files: [
             path.join(SRC_PATH, 'vendor.js'),
@@ -23,7 +26,7 @@ module.exports = config => {
             'karma-webpack',
             'karma-jasmine',
             'karma-junit-reporter',
-            'karma-phantomjs-launcher',
+            'karma-chrome-launcher',
             'karma-html2js-preprocessor'
         ],
         preprocessors: {
