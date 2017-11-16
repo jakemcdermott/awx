@@ -1,6 +1,7 @@
 const templateUrl = require('~components/form/form.partial.html');
 
 function atFormLink (scope, el, attrs, controllers) {
+    console.log(controllers);
     const formController = controllers[0];
     const form = el[0];
 
@@ -47,6 +48,7 @@ function AtFormController (eventService, strings) {
         ]);
 
         scope.$on('$destroy', () => eventService.remove(listeners));
+        scope.$on('check', () => vm.check());
     };
 
     vm.submitOnEnter = event => {

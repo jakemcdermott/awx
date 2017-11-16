@@ -77,8 +77,6 @@ function AddCredentialsController (models, $state, $scope, strings) {
 
         delete data.inputs[gceFileInputSchema.id];
 
-        console.log(data);
-
         return credential.request('post', { data });
     };
 
@@ -88,7 +86,7 @@ function AddCredentialsController (models, $state, $scope, strings) {
 
     vm.onGCEFileInputChanged = value => {
         if (!value) {
-            // vm.unsetGCEFileInput();
+            vm.unsetGCEFileInput();
             return;
         }
 
@@ -105,6 +103,8 @@ function AddCredentialsController (models, $state, $scope, strings) {
         }
 
         vm.setGCEFileInput(obj);
+        // $scope.$broadcast('check');
+        // vm.form.state.isValid = true;
     };
 
     vm.gceFileHasRequiredFields = obj => Object.keys(gceFileInputMapping)
@@ -112,7 +112,6 @@ function AddCredentialsController (models, $state, $scope, strings) {
         .every(key => Object.prototype.hasOwnProperty.call(obj, key));
 
     vm.setGCEFileInput = obj => {
-        console.log(obj);
         vm.gceInputGroup.project._disabled = true;
         vm.gceInputGroup.username._disabled = true;
         vm.gceInputGroup.ssh_key_data._disabled = true;
@@ -121,9 +120,15 @@ function AddCredentialsController (models, $state, $scope, strings) {
         vm.gceInputGroup.username._value = obj.client_email;
         vm.gceInputGroup.ssh_key_data._value = obj.private_key;
 
+        // vm.gceInputGroup.project._isValid = true;
+        // vm.gceInputGroup.username._isValid = true;
+        // vm.gceInputGroup.ssh_key_data._isValid = true;
+
         vm.gceInputGroup[gceFileInputSchema.id]._isValid = true;
         vm.gceInputGroup[gceFileInputSchema.id]._rejected = false;
         vm.gceInputGroup[gceFileInputSchema.id]._message = '';
+
+        $scope.$broadcast('check');
     };
 
     vm.setInvalidGCEFileInput = message => {
@@ -138,6 +143,8 @@ function AddCredentialsController (models, $state, $scope, strings) {
         vm.gceInputGroup[gceFileInputSchema.id]._isValid = false;
         vm.gceInputGroup[gceFileInputSchema.id]._rejected = true;
         vm.gceInputGroup[gceFileInputSchema.id]._message = message;
+
+        $scope.$broadcast('check');
     };
 
     vm.unsetGCEFileInput = () => {
@@ -152,6 +159,8 @@ function AddCredentialsController (models, $state, $scope, strings) {
         vm.gceInputGroup.project._disabled = false;
         vm.gceInputGroup.username._disabled = false;
         vm.gceInputGroup.ssh_key_data._disabled = false;
+
+        $scope.$broadcast('check');
     };
 
     vm.parseGCEFile = value => {

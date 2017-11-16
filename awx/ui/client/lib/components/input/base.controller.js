@@ -40,6 +40,7 @@ function BaseInputController (strings) {
         }
 
         form.register(type, scope);
+        scope.$on('check', () => vm.check());
 
         vm.validate = () => {
             let isValid = true;
@@ -60,7 +61,6 @@ function BaseInputController (strings) {
                     message = result.message || vm.strings.get('message.INVALID_INPUT');
                 }
             }
-
             return {
                 isValid,
                 message
