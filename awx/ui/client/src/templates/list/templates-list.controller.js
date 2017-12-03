@@ -264,7 +264,8 @@ export default ['$scope', '$rootScope',
                         if(result.data.can_copy) {
                             if(result.data.can_copy_without_user_input) {
                                 // Go ahead and copy the workflow - the user has full priveleges on all the resources
-                                TemplateCopyService.copyWorkflow(template.id)
+                                const copyName = TemplateCopyService.getWorkflowCopyName(template.name);
+                                TemplateCopyService.copyWorkflow(template.id, copyName)
                                 .then(function(result) {
                                     $state.go('templates.editWorkflowJobTemplate', {workflow_job_template_id: result.data.id}, {reload: true});
                                 })
