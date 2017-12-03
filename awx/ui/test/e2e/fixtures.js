@@ -9,12 +9,18 @@ import {
     spread
 } from './api';
 
-const session = `e2e-${uuid().substr(0, 8)}`;
+const RESOURCE_IDENTIFIERS = [
+    'name',
+    'username',
+    'id',
+    'unified_job_template'
+];
 
+const session = `e2e-${uuid().substr(0, 8)}`;
 const store = {};
 
 const getOrCreate = (endpoint, data) => {
-    const identifier = Object.keys(data).find(key => ['name', 'username'].includes(key));
+    const identifier = Object.keys(data).find(key => RESOURCE_IDENTIFIERS.includes(key));
 
     if (identifier === undefined) {
         throw new Error('A unique key value must be provided.');
@@ -22,12 +28,10 @@ const getOrCreate = (endpoint, data) => {
 
     const identity = data[identifier];
 
-    if (store[endpoint] && store[endpoint][identity]) {
-        return store[endpoint][identity].then(created => created.data);
-    }
+    store[endpoint] = store[endpoint] || {};
 
-    if (!store[endpoint]) {
-        store[endpoint] = {};
+    if (store[endpoint][identity]) {
+        return store[endpoint][identity].then(created => created.data);
     }
 
     const query = { params: { [identifier]: identity } };
@@ -224,6 +228,44 @@ const getJobTemplate = (namespace = session) => {
         })));
 };
 
+const getWorkflowTemplate = (namespace = session) => {
+    const workflowTemplatePromise = getOrganization(namespace)
+        .then(organization => getOrCreate('/workflow_job_templates/', {
+            name: `${namespace}-workflow-template`,
+            organization: organization.id,
+            variables: '---',
+            extra_vars: ''
+        }));
+
+    const resources = [
+        workflowTemplatePromise,
+        getInventorySource(namespace),
+        getUpdatedProject(namespace),
+        getJobTemplate(namespace)
+    ];
+
+    const workflowNodeTreePromise = all(resources)
+        .then(spread((workflowTemplate, source, project, jobTemplate) => {
+            const collection = workflowTemplate.related.workflow_nodes;
+
+            const nodes = [
+                getOrCreate(collection, { unified_job_template: project.id }),
+                getOrCreate(collection, { unified_job_template: jobTemplate.id }),
+                getOrCreate(collection, { unified_job_template: source.id })
+            ];
+
+            const createDecisionTree = (projectNode, jobNode, sourceNode) => all([
+                getOrCreate(projectNode.related.success_nodes, { id: jobNode.id }),
+                getOrCreate(jobNode.related.success_nodes, { id: sourceNode.id })
+            ]);
+
+            return all(nodes).then(spread(createDecisionTree));
+        }));
+
+    return all([workflowTemplatePromise, workflowNodeTreePromise])
+        .then(spread((workflowTemplate, nodes) => workflowTemplate));
+};
+
 const getAuditor = (namespace = session) => getOrganization(namespace)
     .then(organization => getOrCreate('/users/', {
         username: `auditor-${uuid().substr(0, 8)}`,
@@ -297,10 +339,10 @@ module.exports = {
     getJobTemplateAdmin,
     getJobTemplateSchedule,
     getNotificationTemplate,
-    getOrCreate,
+    getProject,
     getOrganization,
     getSmartInventory,
     getTeam,
-    getUpdatedProject,
-    getUser
+    getUser,
+    getWorkflowTemplate
 };
