@@ -318,7 +318,7 @@ function ListTemplatesController (model, JobTemplate, WorkflowJobTemplate, strin
         });
     };
 }
-
+// placeholder
 ListTemplatesController.$inject = [
     'resolvedModels',
     'JobTemplateModel',
