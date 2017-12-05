@@ -412,6 +412,22 @@ function getDependentResourceCounts (id) {
     return Promise.all(promises);
 }
 
+function copy () {
+    if (this.has('POST', 'related.copy')) {
+        const name = `${this.get('name')}@${new Date().toLocaleTimeString()}`;
+
+        const req = {
+            method: 'POST',
+            url: `${this.path}${this.get('id')}/copy/`,
+            data: { name }
+        };
+
+        return $http(req).then(res => res.data);
+    }
+
+    return Promise.reject(new Error('No related property, copy, exists'));
+}
+
 /**
  * `create` is called on instantiation of every model. Models can be
  * instantiated empty or with `GET` and/or `OPTIONS` requests that yield data.
@@ -511,6 +527,7 @@ function BaseModel (resource, settings) {
     this.set = set;
     this.unset = unset;
     this.extend = extend;
+    this.copy = copy;
     this.getDependentResourceCounts = getDependentResourceCounts;
 
     this.http = {
