@@ -7,12 +7,12 @@
  export default ['$scope', 'Wait', 'NotificationTemplatesList',
      'GetBasePath', 'Rest', 'ProcessErrors', 'Prompt', '$state',
      'ngToast', '$filter', 'Dataset', 'rbacUiControlService',
-     'i18n',
+     'i18n', 'NotificationTemplate',
      function(
          $scope, Wait, NotificationTemplatesList,
          GetBasePath, Rest, ProcessErrors, Prompt, $state,
          ngToast, $filter, Dataset, rbacUiControlService,
-         i18n) {
+         i18n, NotificationTemplate) {
 
          var defaultUrl = GetBasePath('notification_templates'),
              list = NotificationTemplatesList;
@@ -88,6 +88,24 @@
              notification_template.template_status_html = html;
          }
 
+        $scope.copyNotification = notificationTemplate => {
+            Wait('start');
+            new NotificationTemplate('get', notificationTemplate.id)
+                .then(model => model.copy())
+                .then(({ id }) => {
+                    const params =  {
+                        notification_template_id: id,
+                        notification_template: this.notification_templates
+                    };
+                    $state.go('notifications.edit', params, { reload: true });
+                })
+                .catch(({ data, status }) => {
+                    const params = { hdr: 'Error!', msg: `Call to copy failed. Return status: ${status}` };
+                    ProcessErrors($scope, data, status, null, params);
+                })
+                .finally(() => Wait('stop'));
+        };
+
          $scope.testNotification = function() {
              var name = $filter('sanitize')(this.notification_template.name),
                  pending_retries = 10;
@@ -151,6 +169,7 @@
                  }, 5000);
              }
          };
+
 
          $scope.addNotification = function() {
              $state.go('notifications.add');
