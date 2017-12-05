@@ -1,5 +1,5 @@
 /** ***********************************************
- * Copyright (c) 2016 Ansible, Inc.
+ * Copyright (c) 2017 Ansible, Inc.
  *
  * All Rights Reserved
  ************************************************ */
@@ -16,7 +16,6 @@ const ERROR_EDIT = 'Error: Unable to edit template';
 const ERROR_DELETE = 'Error: Unable to delete template';
 const ERROR_LAUNCH = 'Error: Unable to launch template';
 const ERROR_UNKNOWN = 'Error: Unable to determine template type';
-const ERROR_JOB_COPY = 'Error: Unable to copy job';
 const ERROR_JOB_SCHEDULE = 'Error: Unable to schedule job';
 const ERROR_TEMPLATE_COPY = 'Error: Unable to copy job template';
 const ERROR_WORKFLOW_COPY = 'Error: Unable to copy workflow job template';
@@ -43,9 +42,9 @@ function TemplatesListController (
     rbacUiControlService,
     TemplatesService,
     qs,
-    TemplateCopyService,
     i18n,
     JobTemplate,
+    WorkflowJobTemplate,
     TemplatesStrings
 ) {
     const jobTemplate = new JobTemplate();
@@ -164,12 +163,79 @@ function TemplatesListController (
         } else if (isJobTemplate(template)) {
             jobTemplate.getDependentResourceCounts(template.id)
                 .then(counts => {
-                    const body = buildTemplateDeletePromptBodyHTML(counts);
+                    const body = buildTemplateDeletePromptHTML(counts);
                     $scope.displayTemplateDeletePrompt(template, body);
                 });
         } else {
             Alert(ERROR_UNKNOWN, ALERT_UNKNOWN_DELETE);
         }
+    };
+
+    $scope.copyTemplate = template => {
+        if (!template) {
+            Alert(ERROR_TEMPLATE_COPY, ALERT_MISSING);
+            return;
+        }
+
+        if (isJobTemplate(template)) {
+            $scope.copyJobTemplate(template);
+        } else if (isWorkflowTemplate(template)) {
+            $scope.copyWorkflowJobTemplate(template);
+        } else {
+            Alert(ERROR_UNKNOWN, ALERT_UNKNOWN_COPY);
+        }
+    };
+
+    $scope.copyJobTemplate = template => {
+        Wait('start');
+        new JobTemplate('get', template.id)
+            .then(model => model.copy())
+            .then(({ id }) => {
+                const params = { job_template_id: id };
+                $state.go('templates.editJobTemplate', params, { reload: true });
+            })
+            .catch(({ data, status }) => {
+                const params = { hdr: 'Error!', msg: `Call to copy failed. Return status: ${status}` };
+                ProcessErrors($scope, data, status, null, params);
+            })
+            .finally(() => Wait('stop'));
+    };
+
+    $scope.copyWorkflowJobTemplate = template => {
+        Wait('start');
+        new WorkflowJobTemplate('get', template.id)
+            .then(model => model.extend('GET', 'copy'))
+            .then(model => {
+                const action = () => {
+                    model.copy()
+                        .then(({ id }) => {
+                            const params = { workflow_job_template_id: id };
+                            $state.go('templates.editWorkflowJobTemplate', params, { reload: true });
+                        })
+                        .catch(({ data, status }) => {
+                            const params = { hdr: 'Error!', msg: `Call to copy failed. Return status: ${status}` };
+                            ProcessErrors($scope, data, status, null, params);
+                        });
+                };
+                if (model.get('related.copy.can_copy_without_user_input')) {
+                    action();
+                } else if (model.get('related.copy.can_copy')) {
+                    Prompt({
+                        hdr: 'Copy Workflow',
+                        action,
+                        actionText: 'COPY',
+                        class: 'Modal-primaryButton',
+                        body: buildWorkflowCopyPromptHTML(model.get('related.copy'))
+                    });
+                } else {
+                    Alert(ERROR_WORKFLOW_COPY, ALERT_NO_PERMISSION);
+                }
+            })
+            .catch(({ data, status }) => {
+                const params = { hdr: 'Error!', msg: `Call to copy failed. Return status: ${status}` };
+                ProcessErrors($scope, data, status, null, params);
+            })
+            .finally(() => Wait('stop'));
     };
 
     $scope.displayTemplateDeletePrompt = (template, body) => {
@@ -239,106 +305,7 @@ function TemplatesListController (
         });
     };
 
-    $scope.displayWorkflowTemplateCopyPrompt = (template, body) => {
-        Prompt({
-            hdr: 'Copy Workflow',
-            body,
-            action () {
-                $('#prompt-modal').modal('hide');
-                Wait('start');
-                TemplateCopyService.copyWorkflow(template.id)
-                    .then(res => {
-                        Wait('stop');
-                        const destination = 'templates.editWorkflowJobTemplate';
-                        const opts = { workflow_job_template_id: res.data.id };
-                        $state.go(destination, opts, { reload: true });
-                    }, data => {
-                        const { status } = data;
-                        Wait('stop');
-                        ProcessErrors($scope, data, status, null, {
-                            hdr: 'Error!',
-                            msg: `Call to copy template failed. POST returned status: ${status}.`
-                        });
-                    });
-            },
-            actionText: 'COPY',
-            class: 'Modal-primaryButton'
-        });
-    };
-
-    $scope.copyTemplate = template => {
-        if (!template) {
-            Alert(ERROR_TEMPLATE_COPY, ALERT_MISSING);
-            return;
-        }
-
-        if (isJobTemplate(template)) {
-            Wait('start');
-            TemplateCopyService.get(template.id)
-                .then(response => {
-                    TemplateCopyService.set(response.data.results)
-                        .then(obj => {
-                            Wait('stop');
-                            if (isJobTemplate(obj)) {
-                                $state.go('templates.editJobTemplate', { job_template_id: obj.id }, { reload: true });
-                            }
-                        })
-                        .catch(({ data, status }) => {
-                            ProcessErrors($scope, data, status, null, {
-                                hdr: 'Error!',
-                                msg: `Call failed. Return status: ${status}`
-                            });
-                        });
-                })
-                .catch(({ data, status }) => {
-                    ProcessErrors($rootScope, data, status, null, {
-                        hdr: 'Error!',
-                        msg: `Call failed. Return status: ${status}`
-                    });
-                });
-        } else if (isWorkflowTemplate(template)) {
-            TemplateCopyService.getWorkflowCopy(template.id)
-                .then(result => {
-                    if (result.data.can_copy && result.data.can_copy_without_user_input) {
-                        // Go ahead and copy the workflow - the user has full priveleges
-                        // on all the resources.
-                        const copyName = TemplateCopyService.getWorkflowCopyName(template.name);
-                        TemplateCopyService.copyWorkflow(template.id, copyName)
-                            .then(res => {
-                                const params = { workflow_job_template_id: res.data.id };
-                                $state.go('templates.editWorkflowJobTemplate', params, { reload: true });
-                            })
-                            .catch(response => {
-                                Wait('stop');
-                                ProcessErrors($scope, response.data, response.status, null, {
-                                    hdr: 'Error!',
-                                    msg: `Call to copy workflow job template failed. Return status: ${response.status}.`
-                                });
-                            });
-                    } else if (result.data.can_copy) {
-                        const body = buildWorkflowCopyPromptBodyHTML({
-                            templates: result.data.job_template_unable_to_copy,
-                            credentials: result.data.credentials_unable_to_copy,
-                            inventories: result.data.inventories_unable_to_copy
-                        });
-                        $scope.displayWorkflowTemplateCopyPrompt(template, body);
-                    } else {
-                        Alert(ERROR_WORKFLOW_COPY, ALERT_NO_PERMISSION);
-                    }
-                }, rejection => {
-                    const { status } = rejection;
-                    Wait('stop');
-                    ProcessErrors($scope, rejection, status, null, {
-                        hdr: 'Error!',
-                        msg: `Call to copy template failed. GET returned status: ${status}`
-                    });
-                });
-        } else {
-            Alert(ERROR_UNKNOWN, ALERT_UNKNOWN_COPY);
-        }
-    };
-
-    function buildTemplateDeletePromptBodyHTML (dependentResourceCounts) {
+    function buildTemplateDeletePromptHTML (dependentResourceCounts) {
         const invalidateRelatedLines = [];
 
         let bodyHTML = `
@@ -373,12 +340,18 @@ function TemplatesListController (
         return bodyHTML;
     }
 
-    function buildWorkflowCopyPromptBodyHTML ({ templates, inventories, credentials }) {
+    function buildWorkflowCopyPromptHTML (data) {
+        const {
+            credentials_unable_to_copy,
+            inventories_unable_to_copy,
+            job_templates_unable_to_copy
+        } = data;
+
         let itemsHTML = '';
 
-        if (templates.length > 0) {
+        if (job_templates_unable_to_copy.length > 0) {
             itemsHTML += '<div>Unified Job Templates that cannot be copied<ul>';
-            _.forOwn(templates, ujt => {
+            _.forOwn(job_templates_unable_to_copy, ujt => {
                 if (ujt) {
                     itemsHTML += `<li>'${ujt}</li>`;
                 }
@@ -386,9 +359,9 @@ function TemplatesListController (
             itemsHTML += '</ul></div>';
         }
 
-        if (inventories.length > 0) {
+        if (inventories_unable_to_copy.length > 0) {
             itemsHTML += '<div>Node prompted inventories that cannot be copied<ul>';
-            _.forOwn(inventories, inv => {
+            _.forOwn(inventories_unable_to_copy, inv => {
                 if (inv) {
                     itemsHTML += `<li>'${inv}</li>`;
                 }
@@ -396,9 +369,9 @@ function TemplatesListController (
             itemsHTML += '</ul></div>';
         }
 
-        if (credentials.length > 0) {
+        if (credentials_unable_to_copy.length > 0) {
             itemsHTML += '<div>Node prompted credentials that cannot be copied<ul>';
-            _.forOwn(credentials, cred => {
+            _.forOwn(credentials_unable_to_copy, cred => {
                 if (cred) {
                     itemsHTML += `<li>'${cred}</li>`;
                 }
@@ -437,10 +410,10 @@ TemplatesListController.$inject = [
     'rbacUiControlService',
     'TemplatesService',
     'QuerySet',
-    'TemplateCopyService',
     'i18n',
     'JobTemplateModel',
-    'TemplatesStrings'
+    'WorkflowJobTemplateModel',
+    'TemplatesStrings',
 ];
 
 export default TemplatesListController;

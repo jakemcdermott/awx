@@ -16,7 +16,6 @@ import workflowMaker from './workflows/workflow-maker/main';
 import workflowControls from './workflows/workflow-controls/main';
 import templatesListRoute from './list/templates-list.route';
 import workflowService from './workflows/workflow.service';
-import templateCopyService from './copy-template/template-copy.service';
 import WorkflowForm from './workflows.form';
 import CompletedJobsList from './completed-jobs.list';
 import InventorySourcesList from './inventory-sources.list';
@@ -29,7 +28,6 @@ angular.module('templates', [surveyMaker.name, templatesList.name, jobTemplates.
     ])
     .service('TemplatesService', templatesService)
     .service('WorkflowService', workflowService)
-    .service('TemplateCopyService', templateCopyService)
     .factory('WorkflowForm', WorkflowForm)
     .factory('CompletedJobsList', CompletedJobsList)
     .factory('TemplateList', TemplateList)
