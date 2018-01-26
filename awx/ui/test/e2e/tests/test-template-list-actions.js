@@ -30,18 +30,18 @@ module.exports = {
         templates.waitForElementVisible('div.spinny');
         templates.waitForElementNotVisible('div.spinny');
 
-        templates.section.list.expect.element('smart-search').visible;
-        templates.section.list.section.search.expect.element('@input').enabled;
+        templates.expect.element('smart-search').visible;
+        templates.expect.element('smart-search input').enabled;
 
-        templates.section.list.section.search
-            .sendKeys('@input', `id:>${data.jobTemplate.id - 1} id:<${data.jobTemplate.id + 1}`)
-            .sendKeys('@input', client.Keys.ENTER);
+        templates
+            .sendKeys('smart-search input', `id:>${data.jobTemplate.id - 1} id:<${data.jobTemplate.id + 1}`)
+            .sendKeys('smart-search input', client.Keys.ENTER);
 
         templates.waitForElementVisible('div.spinny');
         templates.waitForElementNotVisible('div.spinny');
 
-        templates.section.list.expect.element('@badge').text.equal('1');
-        templates.expect.element(`#templates_table tr[id="${data.jobTemplate.id}"]`).visible;
+        templates.expect.element('.at-Panel-headingTitleBadge').text.equal('1');
+        templates.expect.element(`#row-${data.jobTemplate.id}`).visible;
         templates.expect.element('i[class*="copy"]').visible;
         templates.expect.element('i[class*="copy"]').enabled;
 
@@ -70,18 +70,18 @@ module.exports = {
         templates.waitForElementVisible('div.spinny');
         templates.waitForElementNotVisible('div.spinny');
 
-        templates.section.list.expect.element('smart-search').visible;
-        templates.section.list.section.search.expect.element('@input').enabled;
+        templates.expect.element('smart-search').visible;
+        templates.expect.element('smart-search input').enabled;
 
-        templates.section.list.section.search
-            .sendKeys('@input', `id:>${data.workflowTemplate.id - 1} id:<${data.workflowTemplate.id + 1}`)
-            .sendKeys('@input', client.Keys.ENTER);
+        templates
+            .sendKeys('smart-search input', `id:>${data.workflowTemplate.id - 1} id:<${data.workflowTemplate.id + 1}`)
+            .sendKeys('smart-search input', client.Keys.ENTER);
 
         templates.waitForElementVisible('div.spinny');
         templates.waitForElementNotVisible('div.spinny');
 
-        templates.section.list.expect.element('@badge').text.equal('1');
-        templates.expect.element(`#templates_table tr[id="${data.workflowTemplate.id}"]`).visible;
+        templates.expect.element('.at-Panel-headingTitleBadge').text.equal('1');
+        templates.expect.element(`#row-${data.workflowTemplate.id}`).visible;
         templates.expect.element('i[class*="copy"]').visible;
         templates.expect.element('i[class*="copy"]').enabled;
 
@@ -101,6 +101,7 @@ module.exports = {
 
         client
             .useXpath()
+            .pause(1000)
             .waitForElementVisible('//*[text()=" Workflow Editor"]')
             .click('//*[text()=" Workflow Editor"]')
             .useCss()
@@ -123,7 +124,7 @@ module.exports = {
         client.waitForElementVisible('workflow-controls');
         client.waitForElementVisible('div[class*="-zoomPercentage"]');
 
-        client.expect.element('div[class*="-zoomPercentage"]').text.equal('100%');
+        client.click('i[class*="fa-home"]').expect.element('div[class*="-zoomPercentage"]').text.equal('100%');
         client.click('i[class*="fa-minus"]').expect.element('div[class*="-zoomPercentage"]').text.equal('90%');
         client.click('i[class*="fa-minus"]').expect.element('div[class*="-zoomPercentage"]').text.equal('80%');
         client.click('i[class*="fa-minus"]').expect.element('div[class*="-zoomPercentage"]').text.equal('70%');
