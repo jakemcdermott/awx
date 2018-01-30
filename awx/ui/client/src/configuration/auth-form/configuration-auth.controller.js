@@ -17,6 +17,11 @@ export default [
     'configurationGithubTeamForm',
     'configurationGoogleForm',
     'configurationLdapForm',
+    'configurationLdap1Form',
+    'configurationLdap2Form',
+    'configurationLdap3Form',
+    'configurationLdap4Form',
+    'configurationLdap5Form',
     'configurationRadiusForm',
     'configurationTacacsForm',
     'configurationSamlForm',
@@ -39,6 +44,11 @@ export default [
         configurationGithubTeamForm,
         configurationGoogleForm,
         configurationLdapForm,
+        configurationLdap1Form,
+        configurationLdap2Form,
+        configurationLdap3Form,
+        configurationLdap4Form,
+        configurationLdap5Form,
         configurationRadiusForm,
         configurationTacacsForm,
         configurationSamlForm,
@@ -55,6 +65,7 @@ export default [
         var formTracker = $scope.$parent.vm.formTracker;
         var dropdownValue = 'azure';
         var activeAuthForm = 'azure';
+
         let codeInputInitialized = false;
 
         // Default active form
@@ -63,7 +74,6 @@ export default [
         }
 
         var activeForm = function() {
-
             if(!$scope.$parent[formTracker.currentFormName()].$dirty) {
                 authVm.activeAuthForm = authVm.dropdownValue;
                 formTracker.setCurrentAuth(authVm.activeAuthForm);
@@ -100,15 +110,21 @@ export default [
                 $scope.$parent.vm.triggerModal(msg, title, buttons);
             }
             formTracker.setCurrentAuth(authVm.activeAuthForm);
+            authVm.ldapSelected = (authVm.activeAuthForm.indexOf('ldap') !== -1);
         };
 
         var dropdownOptions = [
             {label: i18n._('Azure AD'), value: 'azure'},
-			{label: i18n._('GitHub'), value: 'github'},
+            {label: i18n._('GitHub'), value: 'github'},
             {label: i18n._('GitHub Org'), value: 'github_org'},
             {label: i18n._('GitHub Team'), value: 'github_team'},
             {label: i18n._('Google OAuth2'), value: 'google_oauth'},
             {label: i18n._('LDAP'), value: 'ldap'},
+            {label: i18n._('LDAP 1 (Optional)'), value: 'ldap1'},
+            {label: i18n._('LDAP 2 (Optional)'), value: 'ldap2'},
+            {label: i18n._('LDAP 3 (Optional)'), value: 'ldap3'},
+            {label: i18n._('LDAP 4 (Optional)'), value: 'ldap4'},
+            {label: i18n._('LDAP 5 (Optional)'), value: 'ldap5'},
             {label: i18n._('RADIUS'), value: 'radius'},
             {label: i18n._('SAML'), value: 'saml'},
             {label: i18n._('TACACS+'), value: 'tacacs'}
@@ -119,43 +135,83 @@ export default [
             multiple: false,
         });
 
-        var authForms = [{
+        CreateSelect2({
+            element: '#configure-ldap-server-dropdown',
+            multiple: false,
+        });
+
+        var authForms = [
+            {
                 formDef: configurationAzureForm,
                 id: 'auth-azure-form',
                 name: 'azure'
-            }, {
+            },
+            {
                 formDef: configurationGithubForm,
                 id: 'auth-github-form',
                 name: 'github'
-            }, {
+            },
+            {
                 formDef: configurationGithubOrgForm,
                 id: 'auth-github-org-form',
                 name: 'github_org'
-            }, {
+            },
+            {
                 formDef: configurationGithubTeamForm,
                 id: 'auth-github-team-form',
                 name: 'github_team'
-            }, {
+            },
+            {
                 formDef: configurationGoogleForm,
                 id: 'auth-google-form',
                 name: 'google_oauth'
-            }, {
-                formDef: configurationLdapForm,
-                id: 'auth-ldap-form',
-                name: 'ldap'
-            }, {
+            },
+            {
                 formDef: configurationRadiusForm,
                 id: 'auth-radius-form',
                 name: 'radius'
-            }, {
+            },
+            {
                 formDef: configurationTacacsForm,
                 id: 'auth-tacacs-form',
                 name: 'tacacs'
-            }, {
+            },
+            {
                 formDef: configurationSamlForm,
                 id: 'auth-saml-form',
                 name: 'saml'
-            }, ];
+            },
+            {
+                formDef: configurationLdapForm,
+                id: 'auth-ldap-form',
+                name: 'ldap'
+            },
+            {
+                formDef: configurationLdap1Form,
+                id: 'auth-ldap1-form',
+                name: 'ldap1'
+            },
+            {
+                formDef: configurationLdap2Form,
+                id: 'auth-ldap2-form',
+                name: 'ldap2'
+            },
+            {
+                formDef: configurationLdap3Form,
+                id: 'auth-ldap3-form',
+                name: 'ldap3'
+            },
+            {
+                formDef: configurationLdap4Form,
+                id: 'auth-ldap4-form',
+                name: 'ldap4'
+            },
+            {
+                formDef: configurationLdap5Form,
+                id: 'auth-ldap5-form',
+                name: 'ldap5'
+            },
+        ];
 
         var forms = _.pluck(authForms, 'formDef');
         _.each(forms, function(form) {
@@ -179,10 +235,8 @@ export default [
             form.buttons.save.disabled = $rootScope.user_is_system_auditor;
         });
 
-        function startCodeMirrors(key){
-            var form = _.find(authForms, function(f){
-               return f.name === $scope.authVm.activeAuthForm;
-            });
+        function startCodeMirrors(key) {
+            var form = form = _.find(authForms, f => f.name === $scope.authVm.activeAuthForm);
 
             if(!key){
                 // Attach codemirror to fields that need it
@@ -246,9 +300,23 @@ export default [
         // Flag to avoid re-rendering and breaking Select2 dropdowns on tab switching
         var dropdownRendered = false;
 
-        function populateLDAPGroupType(flag){
-            if($scope.$parent.AUTH_LDAP_GROUP_TYPE !== null) {
-                $scope.$parent.AUTH_LDAP_GROUP_TYPE = _.find($scope.$parent.AUTH_LDAP_GROUP_TYPE_options, { value: $scope.$parent.AUTH_LDAP_GROUP_TYPE });
+        function populateLDAPGroupType(flag, index = null){
+            let groupPropName;
+            let groupOptionsPropName;
+            let selectElementId;
+
+            if (index) {
+                groupPropName = `AUTH_LDAP_${index}_GROUP_TYPE`;
+                groupOptionsPropName = `${groupPropName}_options`;
+                selectElementId = `#configuration_ldap${index}_template_${groupPropName}`;
+            } else {
+                groupPropName = 'AUTH_LDAP_GROUP_TYPE';
+                groupOptionsPropName = `${groupPropName}_options`;
+                selectElementId = `#configuration_ldap_template_${groupPropName}`;
+            }
+
+            if($scope.$parent[groupPropName] !== null) {
+                $scope.$parent[groupPropName] = _.find($scope[groupOptionsPropName], { value: $scope.$parent[groupPropName] });
             }
 
             if(flag !== undefined){
@@ -258,7 +326,7 @@ export default [
             if(!dropdownRendered) {
                 dropdownRendered = true;
                 CreateSelect2({
-                    element: '#configuration_ldap_template_AUTH_LDAP_GROUP_TYPE',
+                    element: selectElementId,
                     multiple: false,
                     placeholder: i18n._('Select group types'),
                 });
@@ -288,6 +356,26 @@ export default [
             populateLDAPGroupType(flag);
         });
 
+        $scope.$on('AUTH_LDAP_1_GROUP_TYPE_populated', function(e, data, flag) {
+            populateLDAPGroupType(flag, 1);
+        });
+
+        $scope.$on('AUTH_LDAP_2_GROUP_TYPE_populated', function(e, data, flag) {
+            populateLDAPGroupType(flag, 2);
+        });
+
+        $scope.$on('AUTH_LDAP_3_GROUP_TYPE_populated', function(e, data, flag) {
+            populateLDAPGroupType(flag, 3);
+        });
+
+        $scope.$on('AUTH_LDAP_4_GROUP_TYPE_populated', function(e, data, flag) {
+            populateLDAPGroupType(flag, 4);
+        });
+
+        $scope.$on('AUTH_LDAP_5_GROUP_TYPE_populated', function(e, data, flag) {
+            populateLDAPGroupType(flag, 5);
+        });
+
         $scope.$on('TACACSPLUS_AUTH_PROTOCOL_populated', function(e, data, flag) {
             populateTacacsProtocol(flag);
         });
@@ -311,6 +399,12 @@ export default [
             }
 
             populateLDAPGroupType(false);
+            populateLDAPGroupType(false, 1);
+            populateLDAPGroupType(false, 2);
+            populateLDAPGroupType(false, 3);
+            populateLDAPGroupType(false, 4);
+            populateLDAPGroupType(false, 5);
+
             populateTacacsProtocol(false);
         });
 
@@ -328,7 +422,7 @@ export default [
             activeAuthForm: activeAuthForm,
             authForms: authForms,
             dropdownOptions: dropdownOptions,
-            dropdownValue: dropdownValue
+            dropdownValue: dropdownValue,
         });
     }
 ];
