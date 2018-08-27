@@ -3578,6 +3578,15 @@ class JobTemplateJobsList(SubListCreateAPIView):
         return methods
 
 
+class JobTemplateShardedJobsList(SubListCreateAPIView):
+
+    model = WorkflowJob
+    serializer_class = WorkflowJobListSerializer
+    parent_model = JobTemplate
+    relationship = 'sharded_jobs'
+    parent_key = 'job_template'
+
+
 class JobTemplateInstanceGroupsList(SubListAttachDetachAPIView):
 
     model = InstanceGroup
