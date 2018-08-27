@@ -2677,6 +2677,7 @@ class InventoryScriptView(RetrieveAPIView):
         hostvars = bool(request.query_params.get('hostvars', ''))
         towervars = bool(request.query_params.get('towervars', ''))
         show_all = bool(request.query_params.get('all', ''))
+        subset = request.query_params.get('subset', '')
         if hostname:
             hosts_q = dict(name=hostname)
             if not show_all:
@@ -2686,7 +2687,8 @@ class InventoryScriptView(RetrieveAPIView):
         return Response(obj.get_script_data(
             hostvars=hostvars,
             towervars=towervars,
-            show_all=show_all
+            show_all=show_all,
+            subset=subset
         ))
 
 

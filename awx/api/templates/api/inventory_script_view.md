@@ -23,6 +23,9 @@ are enabled in the inventory.  This feature allows disabled hosts to be skipped
 when running jobs without removing them from the inventory.  Specify a query
 string of `?all=1` to return all hosts, including disabled ones.
 
+Specify a query string of `?subset=shard2of5` to product an inventory that
+has a restricted number of hosts according to the rules of job sharding.
+
 ## Host Response
 
 Make a GET request to this resource with a query string similar to
