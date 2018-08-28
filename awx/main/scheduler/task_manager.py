@@ -192,10 +192,12 @@ class TaskManager():
                 if spawn_node.unified_job_template is None:
                     continue
                 kv = spawn_node.get_job_kwargs()
-                job = spawn_node.unified_job_template.create_unified_job(**kv)
                 if 'job_shard' in spawn_node.ancestor_artifacts:
-                    job.name = six.text_type("{} - {}").format(job.name, spawn_node.ancestor_artifacts['job_shard'] + 1)
-                    job.save()
+                    kv.setdefault('_eager_fields', {})['name'] = six.text_type("{} - {}").format(
+                        spawn_node.unified_job_template.name,
+                        spawn_node.ancestor_artifacts['job_shard'] + 1
+                    )
+                job = spawn_node.unified_job_template.create_unified_job(**kv)
                 spawn_node.job = job
                 spawn_node.save()
                 if job._resources_sufficient_for_launch():

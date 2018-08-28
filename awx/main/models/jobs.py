@@ -320,32 +320,39 @@ class JobTemplate(UnifiedJobTemplate, JobOptions, SurveyJobTemplateMixin, Resour
     def resources_needed_to_start(self):
         return [fd for fd in ['project', 'inventory'] if not getattr(self, '{}_id'.format(fd))]
 
-    def create_job(self, **kwargs):
+    def create_unified_job(self, **kwargs):
         '''
         Create a new job based on this template.
         '''
-        if self.job_shard_count > 1:
+        split_event = bool(
+            self.job_shard_count > 1 and
+            kwargs.get('_eager_fields', {}).get('launch_type') != 'workflow'
+        )
+        if split_event:
             # A sharded Job Template will generate a WorkflowJob rather than a Job
             from awx.main.models.workflow import WorkflowJobTemplate, WorkflowJobNode
             kwargs['_unified_job_class'] = WorkflowJobTemplate._get_unified_job_class()
-            kwargs['_unified_job_field_names'] = WorkflowJobTemplate._get_unified_job_field_names()
-        job = self.create_unified_job(**kwargs)
-        if self.job_shard_count > 1:
-            if 'inventory' in kwargs:
-                actual_inventory = kwargs['inventory']
-            else:
-                actual_inventory = self.inventory
+            kwargs['_unified_job_field_names'] = (
+                WorkflowJobTemplate._get_unified_job_field_names() &
+                JobTemplate._get_unified_job_field_names()
+            )
+        job = super(JobTemplate, self).create_unified_job(**kwargs)
+        if split_event:
+            try:
+                wj_config = job.launch_config
+            except JobLaunchConfig.DoesNotExist:
+                wj_config = JobLaunchConfig()
+            actual_inventory = wj_config.inventory if wj_config.inventory else self.inventory
             for idx in xrange(min(self.job_shard_count,
                                   actual_inventory.hosts.count())):
                 create_kwargs = dict(workflow_job=job,
                                      unified_job_template=self,
-                                     #survey_passwords=self.survey_passwords,
-                                     inventory=actual_inventory,
-                                     ancestor_artifacts=dict(job_shard=idx))
-                                     #char_prompts=self.char_prompts)
+                                     survey_passwords=wj_config.survey_passwords,
+                                     inventory=wj_config.inventory,
+                                     ancestor_artifacts=dict(job_shard=idx),
+                                     char_prompts=wj_config.char_prompts)
                 wfjn = WorkflowJobNode.objects.create(**create_kwargs)
-                for cred in self.credentials.all():
-                    wfjn.credentials.add(cred)
+                wfjn.credentials.add(*wj_config.prompts_dict().get('credentials', []))
         return job
 
     def get_absolute_url(self, request=None):
