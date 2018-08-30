@@ -193,10 +193,12 @@ class TaskManager():
                     continue
                 kv = spawn_node.get_job_kwargs()
                 if 'job_shard' in spawn_node.ancestor_artifacts:
+                    shard_str = six.text_type(spawn_node.ancestor_artifacts['job_shard'] + 1)
                     kv.setdefault('_eager_fields', {})['name'] = six.text_type("{} - {}").format(
-                        spawn_node.unified_job_template.name,
-                        spawn_node.ancestor_artifacts['job_shard'] + 1
+                        spawn_node.unified_job_template.name[:512 - len(shard_str) - len(' - ')],
+                        shard_str
                     )
+                    kv['_eager_fields']['allow_simultaneous'] = True
                 job = spawn_node.unified_job_template.create_unified_job(**kv)
                 spawn_node.job = job
                 spawn_node.save()
