@@ -338,8 +338,16 @@ class UnifiedJobTemplate(PolymorphicModel, CommonModelNameNotUnique, Notificatio
             password_list = self.survey_password_variables()
             encrypt_dict(kwargs.get('extra_vars', {}), password_list)
 
-        unified_job_class = kwargs.pop("_unified_job_class", self._get_unified_job_class())
-        fields = kwargs.pop("_unified_job_field_names", self._get_unified_job_field_names())
+        unified_job_class = self._get_unified_job_class()
+        fields = self._get_unified_job_field_names()
+        parent_field_name = None
+        if "_unified_job_class" in kwargs:
+            # Special case where spawned job is different type than usual
+            # Only used for sharded jobs
+            unified_job_class = kwargs.pop("_unified_job_class")
+            fields = unified_job_class._get_unified_job_field_names() & fields
+            parent_field_name = kwargs.pop('_parent_field_name')
+
         unallowed_fields = set(kwargs.keys()) - set(fields)
         validated_kwargs = kwargs.copy()
         if unallowed_fields:
@@ -352,12 +360,10 @@ class UnifiedJobTemplate(PolymorphicModel, CommonModelNameNotUnique, Notificatio
             for fd, val in eager_fields.items():
                 setattr(unified_job, fd, val)
 
-        # Set the unified job template back-link on the job
-        # TODO: fix this hack properly before merge matburt
-        if isinstance(self, JobTemplate) and isinstance(unified_job, WorkflowJob):
-            parent_field_name = "job_template"
-        else:
-            parent_field_name = unified_job_class._get_parent_field_name()
+        # NOTE: sharded workflow jobs _get_parent_field_name method
+        # is not correct until this is set
+        if not parent_field_name:
+            parent_field_name = unified_job._get_parent_field_name()
         setattr(unified_job, parent_field_name, self)
 
         # For JobTemplate-based jobs with surveys, add passwords to list for perma-redaction
@@ -702,8 +708,7 @@ class UnifiedJob(PolymorphicModel, PasswordFieldsModel, CommonModelNameNotUnique
     def supports_isolation(cls):
         return False
 
-    @classmethod
-    def _get_parent_field_name(cls):
+    def _get_parent_field_name(self):
         return 'unified_job_template' # Override in subclasses.
 
     @classmethod

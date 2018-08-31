@@ -332,10 +332,7 @@ class JobTemplate(UnifiedJobTemplate, JobOptions, SurveyJobTemplateMixin, Resour
             # A sharded Job Template will generate a WorkflowJob rather than a Job
             from awx.main.models.workflow import WorkflowJobTemplate, WorkflowJobNode
             kwargs['_unified_job_class'] = WorkflowJobTemplate._get_unified_job_class()
-            kwargs['_unified_job_field_names'] = (
-                WorkflowJobTemplate._get_unified_job_field_names() &
-                JobTemplate._get_unified_job_field_names()
-            )
+            kwargs['_parent_field_name'] = "job_template"
         job = super(JobTemplate, self).create_unified_job(**kwargs)
         if split_event:
             try:
@@ -347,10 +344,7 @@ class JobTemplate(UnifiedJobTemplate, JobOptions, SurveyJobTemplateMixin, Resour
                                   actual_inventory.hosts.count())):
                 create_kwargs = dict(workflow_job=job,
                                      unified_job_template=self,
-                                     survey_passwords=wj_config.survey_passwords,
-                                     inventory=wj_config.inventory,
-                                     ancestor_artifacts=dict(job_shard=idx),
-                                     char_prompts=wj_config.char_prompts)
+                                     ancestor_artifacts=dict(job_shard=idx))
                 wfjn = WorkflowJobNode.objects.create(**create_kwargs)
                 wfjn.credentials.add(*wj_config.prompts_dict().get('credentials', []))
         return job
@@ -538,8 +532,7 @@ class Job(UnifiedJob, JobOptions, SurveyJobMixin, JobNotificationMixin, TaskMana
     )
 
 
-    @classmethod
-    def _get_parent_field_name(cls):
+    def _get_parent_field_name(self):
         return 'job_template'
 
     @classmethod
