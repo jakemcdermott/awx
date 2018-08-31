@@ -346,7 +346,6 @@ class JobTemplate(UnifiedJobTemplate, JobOptions, SurveyJobTemplateMixin, Resour
                                      unified_job_template=self,
                                      ancestor_artifacts=dict(job_shard=idx))
                 wfjn = WorkflowJobNode.objects.create(**create_kwargs)
-                wfjn.credentials.add(*wj_config.prompts_dict().get('credentials', []))
         return job
 
     def get_absolute_url(self, request=None):
