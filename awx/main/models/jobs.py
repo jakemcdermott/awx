@@ -326,7 +326,7 @@ class JobTemplate(UnifiedJobTemplate, JobOptions, SurveyJobTemplateMixin, Resour
         '''
         split_event = bool(
             self.job_shard_count > 1 and
-            kwargs.get('_eager_fields', {}).get('launch_type') != 'workflow'
+            not kwargs.pop('_prevent_sharding', False)
         )
         if split_event:
             # A sharded Job Template will generate a WorkflowJob rather than a Job

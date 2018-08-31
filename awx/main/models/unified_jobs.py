@@ -309,13 +309,6 @@ class UnifiedJobTemplate(PolymorphicModel, CommonModelNameNotUnique, Notificatio
         '''
         raise NotImplementedError # Implement in subclass.
 
-    @classmethod
-    def _get_unified_job_field_names(cls):
-        '''
-        Return field names that should be copied from template to new job.
-        '''
-        raise NotImplementedError # Implement in subclass.
-
     @property
     def notification_templates(self):
         '''

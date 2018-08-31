@@ -259,6 +259,7 @@ class WorkflowJobNode(WorkflowNodeBase):
                 shard_str
             )
             data['_eager_fields']['allow_simultaneous'] = True
+            data['_prevent_sharding'] = True
         return data
 
 
