@@ -2974,12 +2974,9 @@ class JobTemplateMixin(object):
     '''
 
     def _recent_jobs(self, obj):
-        if hasattr(obj, 'workflow_jobs'):
-            job_mgr = obj.workflow_jobs
-        else:
-            job_mgr = obj.jobs
+        job_mgr = UnifiedJob.objects.filter(unified_job_template_id=obj.id).non_polymorphic()
         return [{'id': x.id, 'status': x.status, 'finished': x.finished}
-                for x in job_mgr.all().order_by('-created')[:10]]
+                for x in job_mgr.order_by('-created').only('id', 'status', 'finished')[:10]]
 
     def get_summary_fields(self, obj):
         d = super(JobTemplateMixin, self).get_summary_fields(obj)
