@@ -2974,9 +2974,9 @@ class JobTemplateMixin(object):
     '''
 
     def _recent_jobs(self, obj):
-        job_mgr = UnifiedJob.objects.filter(unified_job_template_id=obj.id).non_polymorphic()
+        job_mgr = obj.unifiedjob_unified_jobs.non_polymorphic().only('id', 'status', 'finished')
         return [{'id': x.id, 'status': x.status, 'finished': x.finished}
-                for x in job_mgr.order_by('-created').only('id', 'status', 'finished')[:10]]
+                for x in job_mgr.order_by('-created')[:10]]
 
     def get_summary_fields(self, obj):
         d = super(JobTemplateMixin, self).get_summary_fields(obj)
