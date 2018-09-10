@@ -553,7 +553,7 @@ class UnifiedJob(PolymorphicModel, PasswordFieldsModel, CommonModelNameNotUnique
         default=None,
         editable=False,
         related_name='%(class)s_unified_jobs',
-        on_delete=models.SET_NULL,
+        on_delete=polymorphic.SET_NULL,
     )
     launch_type = models.CharField(
         max_length=20,

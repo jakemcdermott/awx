@@ -480,7 +480,7 @@ class JobTemplate(UnifiedJobTemplate, JobOptions, SurveyJobTemplateMixin, Resour
     RelatedJobsMixin
     '''
     def _get_related_jobs(self):
-        return Job.objects.filter(job_template=self)
+        return UnifiedJob.objects.filter(unified_job_template=self)
 
 
 class Job(UnifiedJob, JobOptions, SurveyJobMixin, JobNotificationMixin, TaskManagerJobMixin):
