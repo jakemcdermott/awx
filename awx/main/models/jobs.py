@@ -280,7 +280,8 @@ class JobTemplate(UnifiedJobTemplate, JobOptions, SurveyJobTemplateMixin, Resour
     job_shard_count = models.IntegerField(
         blank=True,
         default=0,
-        help_text=_("The number of jobs to split into at runtime. Will cause the Job Template to launch a workflow."),
+        help_text=_("The number of jobs to split into at runtime. "
+                    "Will cause the Job Template to launch a workflow if value is non-zero."),
     )
 
     admin_role = ImplicitRoleField(
