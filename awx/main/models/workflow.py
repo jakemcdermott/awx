@@ -259,6 +259,10 @@ class WorkflowJobNode(WorkflowNodeBase):
                 shard_str
             )
             data['_eager_fields']['allow_simultaneous'] = True
+            data['_eager_fields']['internal_limit'] = 'shard{0}of{1}'.format(
+                self.ancestor_artifacts['job_shard'],
+                self.workflow_job.workflow_job_nodes.count()
+            )
             data['_prevent_sharding'] = True
         return data
 

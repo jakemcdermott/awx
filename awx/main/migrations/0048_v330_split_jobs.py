@@ -29,4 +29,9 @@ class Migration(migrations.Migration):
             name='unified_job_template',
             field=models.ForeignKey(default=None, editable=False, null=True, on_delete=awx.main.utils.polymorphic.SET_NULL, related_name='unifiedjob_unified_jobs', to='main.UnifiedJobTemplate'),
         ),
+        migrations.AddField(
+            model_name='job',
+            name='internal_limit',
+            field=models.CharField(default=b'', editable=False, max_length=1024),
+        ),
     ]

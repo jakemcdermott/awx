@@ -302,7 +302,7 @@ class JobTemplate(UnifiedJobTemplate, JobOptions, SurveyJobTemplateMixin, Resour
     @classmethod
     def _get_unified_job_field_names(cls):
         return set(f.name for f in JobOptions._meta.fields) | set(
-            ['name', 'description', 'schedule', 'survey_passwords', 'labels', 'credentials']
+            ['name', 'description', 'schedule', 'survey_passwords', 'labels', 'credentials', 'internal_limit']
         )
 
     @property
@@ -328,9 +328,11 @@ class JobTemplate(UnifiedJobTemplate, JobOptions, SurveyJobTemplateMixin, Resour
         return self.create_unified_job(**kwargs)
 
     def create_unified_job(self, **kwargs):
+        prevent_sharding = kwargs.pop('_prevent_sharding', False)
         split_event = bool(
             self.job_shard_count > 1 and
-            not kwargs.pop('_prevent_sharding', False)
+            not prevent_sharding and
+            kwargs.get('_eager_fields', {}).get('launch_type', '') != 'relaunch'
         )
         if split_event:
             # A sharded Job Template will generate a WorkflowJob rather than a Job
@@ -532,6 +534,11 @@ class Job(UnifiedJob, JobOptions, SurveyJobMixin, JobNotificationMixin, TaskMana
         default=None,
         on_delete=models.SET_NULL,
         help_text=_('The SCM Refresh task used to make sure the playbooks were available for the job run'),
+    )
+    internal_limit = models.CharField(
+        max_length=1024,
+        default='',
+        editable=False,
     )
 
 

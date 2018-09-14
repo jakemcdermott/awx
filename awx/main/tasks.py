@@ -812,15 +812,7 @@ class BaseTask(Task):
         return False
 
     def build_inventory(self, instance, **kwargs):
-        workflow_job = instance.get_workflow_job()
-        if workflow_job and workflow_job.job_template_id:
-            shard_address = 'shard{0}of{1}'.format(
-                instance.unified_job_node.ancestor_artifacts['job_shard'],
-                workflow_job.workflow_job_nodes.count()
-            )
-            script_data = instance.inventory.get_script_data(hostvars=True, subset=shard_address)
-        else:
-            script_data = instance.inventory.get_script_data(hostvars=True)
+        script_data = instance.inventory.get_script_data(hostvars=True, subset=instance.internal_limit)
         json_data = json.dumps(script_data)
         handle, path = tempfile.mkstemp(dir=kwargs.get('private_data_dir', None))
         f = os.fdopen(handle, 'w')
