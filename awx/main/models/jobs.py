@@ -329,11 +329,7 @@ class JobTemplate(UnifiedJobTemplate, JobOptions, SurveyJobTemplateMixin, Resour
 
     def create_unified_job(self, **kwargs):
         prevent_sharding = kwargs.pop('_prevent_sharding', False)
-        split_event = bool(
-            self.job_shard_count > 1 and
-            not prevent_sharding and
-            kwargs.get('_eager_fields', {}).get('launch_type', '') != 'relaunch'
-        )
+        split_event = bool(self.job_shard_count > 1 and (not prevent_sharding))
         if split_event:
             # A sharded Job Template will generate a WorkflowJob rather than a Job
             from awx.main.models.workflow import WorkflowJobTemplate, WorkflowJobNode
@@ -582,6 +578,13 @@ class Job(UnifiedJob, JobOptions, SurveyJobMixin, JobNotificationMixin, TaskMana
     @property
     def event_class(self):
         return JobEvent
+
+    def copy_unified_job(self, **new_prompts):
+        new_prompts['_prevent_sharding'] = True
+        if self.internal_limit:
+            new_prompts.setdefault('_eager_fields', {})
+            new_prompts['_eager_fields']['internal_limit'] = self.internal_limit  # oddball, not from JT or prompts
+        return super(Job, self).copy_unified_job(**new_prompts)
 
     @property
     def ask_diff_mode_on_launch(self):

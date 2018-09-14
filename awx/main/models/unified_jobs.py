@@ -843,7 +843,6 @@ class UnifiedJob(PolymorphicModel, PasswordFieldsModel, CommonModelNameNotUnique
         prompts = self.launch_prompts()
         if self.unified_job_template and (prompts is not None):
             prompts.update(new_prompts)
-            create_data['internal_limit'] = self.internal_limit  # oddball, not from JT or prompts
             prompts['_eager_fields'] = create_data
             unified_job = self.unified_job_template.create_unified_job(**prompts)
         else:
