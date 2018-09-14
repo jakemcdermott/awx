@@ -812,7 +812,9 @@ class BaseTask(Task):
         return False
 
     def build_inventory(self, instance, **kwargs):
-        script_data = instance.inventory.get_script_data(hostvars=True, subset=instance.internal_limit)
+        script_data = instance.inventory.get_script_data(
+            hostvars=True, subset=getattr(instance, 'internal_limit', '')
+        )
         json_data = json.dumps(script_data)
         handle, path = tempfile.mkstemp(dir=kwargs.get('private_data_dir', None))
         f = os.fdopen(handle, 'w')
