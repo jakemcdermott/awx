@@ -23,26 +23,19 @@ module.exports = {
             selenium_host: 'localhost',
             selenium_port: 9515,
             default_path_prefix: '',
-            desiredCapabilities: { browserName: 'chrome' },
+            desiredCapabilities: { browserName: 'firefox' },
             test_workers: { enabled: false },
             globals: {
                 launch_url: AWX_E2E_LAUNCH_URL,
                 retryAssertionTimeout: AWX_E2E_TIMEOUT_MEDIUM,
                 waitForConditionTimeout: AWX_E2E_TIMEOUT_MEDIUM,
                 asyncHookTimeout: AWX_E2E_TIMEOUT_ASYNC,
-                before (done) {
-                    chromedriver.start(['--port=9515']);
-                    done();
-                },
-                after (done) {
-                    chromedriver.stop();
-                    done();
-                }
             }
         },
         // Note: These are environment-specific overrides to the default
         // test settings defined above.
         cluster: {
+            desiredCapabilities: { browserName: 'firefox', acceptInsecureCerts: true },
             selenium_host: AWX_E2E_CLUSTER_HOST,
             selenium_port: AWX_E2E_CLUSTER_PORT,
             default_path_prefix: '/wd/hub',
