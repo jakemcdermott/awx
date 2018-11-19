@@ -110,6 +110,9 @@ export default ['$scope', '$rootScope','Wait',
         $scope.refresh();
 
         function refreshLists () {
+            // Set the quiet header for the next three requests
+            Rest.setHeader({'X-WS-Session-Quiet': true});
+
             Rest.setUrl(GetBasePath('dashboard'));
             Rest.get()
             .then(({data}) => {
@@ -137,6 +140,10 @@ export default ['$scope', '$rootScope','Wait',
             .catch(({data, status}) => {
                 ProcessErrors($scope, data, status, null, { hdr: 'Error!', msg: 'Failed to get dashboard jobs list: ' + status });
             });
+
+            // Remove the quiet header.  Since there's only the one instance of the Rest service
+            // this header will remain present in all subsequent requests if we don't remove it
+            Rest.removeHeader('X-WS-Session-Quiet');
         }
 
     }

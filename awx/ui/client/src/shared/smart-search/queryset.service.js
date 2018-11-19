@@ -266,10 +266,22 @@ function QuerysetService ($q, Rest, ProcessErrors, $rootScope, Wait, DjangoSearc
             Rest.setUrl(endpoint);
             return Rest.options(endpoint);
         },
-        search(endpoint, params) {
+        search(endpoint, params, headers) {
             Wait('start');
             this.url = `${endpoint}${this.encodeQueryset(params)}`;
             Rest.setUrl(this.url);
+
+            const stripAddedHeaders = () => {
+                if (headers) {
+                    for (const header in headers) {
+                        Rest.removeHeader(header);
+                    }
+                }
+            };
+
+            if (headers) {
+                Rest.setHeader(headers);
+            }
 
             return Rest.get()
                 .then(function(response) {
@@ -281,10 +293,14 @@ function QuerysetService ($q, Rest, ProcessErrors, $rootScope, Wait, DjangoSearc
                             headers('X-UI-Max-Events');
                     }
 
+                    stripAddedHeaders();
+
                     return response;
                 })
                 .catch(function(response) {
                     Wait('stop');
+
+                    stripAddedHeaders();
 
                     this.error(response.data, response.status);
 

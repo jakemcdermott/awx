@@ -63,7 +63,7 @@ function ListTemplatesController(
         $scope.$emit('updateCount', vm.dataset.count, 'templates');
     });
 
-    $scope.$watch('$state.params', function(newValue, oldValue) {
+    $scope.$watch('$state.params', function() {
         const job_template_id = _.get($state.params, 'job_template_id');
         const workflow_job_template_id = _.get($state.params, 'workflow_job_template_id');
 
@@ -192,7 +192,7 @@ function ListTemplatesController(
         if(isJobTemplate(template)) {
             return strings.get('list.ADD_DD_JT_LABEL');
         } else {
-            return strings.get('list.ADD_DD_WF_LABEL');;
+            return strings.get('list.ADD_DD_WF_LABEL');
         }
     };
 

@@ -62,11 +62,10 @@ function requestWithCache (config) {
  * @yields {boolean} - Indicating a match has been found. If so, the results
  * are set on the model.
  */
-function search (params = {}, config = {}, headers = {}) {
+function search (params = {}, config = {}) {
     const req = {
         method: 'GET',
-        url: this.path,
-        headers
+        url: this.path
     };
 
     if (typeof params === 'string') {

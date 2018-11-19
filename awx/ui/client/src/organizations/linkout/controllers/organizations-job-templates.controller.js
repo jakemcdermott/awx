@@ -18,7 +18,7 @@ export default ['$scope', '$rootScope',
 
         $scope.$on(`ws-jobs`, function () {
             let path = GetBasePath(list.basePath) || GetBasePath(list.name);
-            qs.search(path, $state.params[`${list.iterator}_search`])
+            qs.search(path, $state.params[`${list.iterator}_search`], { 'X-WS-Session-Quiet': true })
             .then(function(searchResponse) {
                 $scope[`${list.iterator}_dataset`] = searchResponse.data;
                 $scope[list.name] = $scope[`${list.iterator}_dataset`].results;

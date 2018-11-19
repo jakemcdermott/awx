@@ -49,7 +49,7 @@
                 if(data.status === 'failed' || data.status === 'successful'){
                     let path = GetBasePath('inventory') + $stateParams.inventory_id + '/inventory_sources';
 
-                    qs.search(path, $state.params[`${list.iterator}_search`])
+                    qs.search(path, $state.params[`${list.iterator}_search`], { 'X-WS-Session-Quiet': true })
                     .then((searchResponse)=> {
                         $scope[`${list.iterator}_dataset`] = searchResponse.data;
                         $scope[list.name] = $scope[`${list.iterator}_dataset`].results;

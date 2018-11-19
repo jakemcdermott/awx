@@ -109,6 +109,11 @@ export default
                         this.headers[h] = hdr[h];
                     }
                 },
+                removeHeader: function (hdrKey) {
+                    if (this.headers[hdrKey]) {
+                        delete this.headers[hdrKey];
+                    }
+                },
                 get: function (args) {
                     args = (args) ? args : {};
                     this.params = (args.params) ? args.params : null;

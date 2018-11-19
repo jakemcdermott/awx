@@ -52,6 +52,8 @@ function JobStatusGraphData(Rest, getBasePath, processErrors, $rootScope, $q) {
             return $q.reject(response);
         });
 
+        Rest.removeHeader('X-WS-Session-Quiet');
+
         return pluck('data', result, status);
     }
 

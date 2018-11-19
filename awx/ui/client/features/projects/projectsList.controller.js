@@ -336,7 +336,7 @@ function projectsListController (
     function reloadList () {
         Wait('start');
         const path = GetBasePath(vm.list.basePath) || GetBasePath(vm.list.name);
-        qs.search(path, $state.params.project_search)
+        qs.search(path, $state.params.project_search, { 'X-WS-Session-Quiet': true })
             .then((searchResponse) => {
                 vm.dataset = searchResponse.data;
                 vm.projects = vm.dataset.results;
