@@ -42,6 +42,11 @@ const store = {
 
 module.exports = {
     before: (client, done) => {
+        // generate a unique username on each attempt.
+        const uniqueUser = uuid().substr(0, 8);
+        for (let i = 0; i < store.length; ++i) {
+            store[i].username += `-${uniqueUser}`;
+        }
         const resources = [
             getOrganization(store.organization.name),
             getAuditor(store.auditor.username),
