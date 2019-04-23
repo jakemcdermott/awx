@@ -49,6 +49,7 @@ const deleteConfirmation = "//button[@ng-click='confirmDeleteNode()']";
 
 const xPathNodeById = (id) => `//*[@id='node-${id}']`;
 const xPathLinkById = (sourceId, targetId) => `//*[@id='link-${sourceId}-${targetId}']//*[contains(@class, 'WorkflowChart-linkPath')]`;
+const xPathNodeByName = (name) => `//*[contains(@class, "WorkflowChart-nameText") and contains(text(), "${name}")]/..`
 
 module.exports = {
     before: (client, done) => {
@@ -62,38 +63,38 @@ module.exports = {
         Promise.all(resources)
             .then(([source, template, project, workflow]) => {
                 data = { source, template, project, workflow };
+                client
+                    .login()
+                    .waitForAngular()
+                    .resizeWindow(1200, 1000)
+                    .navigateTo(`${AWX_E2E_URL}/#/templates`, false)
+                    .useXpath()
+                    .waitForElementVisible(workflowSearchBar)
+                    .setValue(workflowSearchBar, [workflowText])
+                    .click('//*[contains(@class, "SmartSearch-searchButton")]')
+                    .waitForSpinny(true)
+                    .click('//*[contains(@class, "SmartSearch-clearAll")]')
+                    .waitForSpinny(true)
+                    .setValue(workflowSearchBar, [workflowText])
+                    .click('//*[contains(@class, "SmartSearch-searchButton")]')
+                    .waitForSpinny(true)
+                    .click(workflowSelector)
+                    .waitForElementVisible(workflowVisualizerBtn)
+                    .click(workflowVisualizerBtn)
+                    .waitForSpinny(true);
+                client.waitForElementVisible(xPathNodeByName('test-actions-job'));
+                // Grab the ids of the nodes
+                client.getAttribute(xPathNodeByName('test-actions-job'), 'id', (res) => {
+                    initialJobNodeId = res.value.split('-')[1];
+                });
+                client.getAttribute(xPathNodeByName('test-actions-project'), 'id', (res) => {
+                    initialProjectNodeId = res.value.split('-')[1];
+                });
+                client.getAttribute(xPathNodeByName('test-actions-inventory'), 'id', (res) => {
+                    initialInventoryNodeId = res.value.split('-')[1];
+                });
                 done();
             });
-        client
-            .login()
-            .waitForAngular()
-            .resizeWindow(1200, 1000)
-            .navigateTo(`${AWX_E2E_URL}/#/templates`, false)
-            .useXpath()
-            .waitForElementVisible(workflowSearchBar)
-            .setValue(workflowSearchBar, [workflowText])
-            .click('//*[contains(@class, "SmartSearch-searchButton")]')
-            .waitForSpinny(true)
-            .click('//*[contains(@class, "SmartSearch-clearAll")]')
-            .waitForSpinny(true)
-            .setValue(workflowSearchBar, [workflowText])
-            .click('//*[contains(@class, "SmartSearch-searchButton")]')
-            .waitForSpinny(true)
-            .click(workflowSelector)
-            .waitForSpinny(true)
-            .click(workflowVisualizerBtn);
-        client.waitForElementVisible('//*[contains(@class, "WorkflowChart-nameText") and contains(text(), "test-actions-job")]/..');
-
-        // Grab the ids of the nodes
-        client.getAttribute('//*[contains(@class, "WorkflowChart-nameText") and contains(text(), "test-actions-job")]/..', 'id', (res) => {
-            initialJobNodeId = res.value.split('-')[1];
-        });
-        client.getAttribute('//*[contains(@class, "WorkflowChart-nameText") and contains(text(), "test-actions-project")]/..', 'id', (res) => {
-            initialProjectNodeId = res.value.split('-')[1];
-        });
-        client.getAttribute('//*[contains(@class, "WorkflowChart-nameText") and contains(text(), "test-actions-inventory")]/..', 'id', (res) => {
-            initialInventoryNodeId = res.value.split('-')[1];
-        });
     },
     'verify that workflow visualizer new root node can only be set to always': client => {
         client
