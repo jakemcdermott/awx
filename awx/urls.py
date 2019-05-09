@@ -11,6 +11,7 @@ from awx.main.views import (
 
 
 urlpatterns = [
+    url(r'', include('awx._ui.urls', namespace='_ui')),
     url(r'', include('awx.ui.urls', namespace='ui')),
     url(r'^api/', include('awx.api.urls', namespace='api')),
     url(r'^sso/', include('awx.sso.urls', namespace='sso')),
