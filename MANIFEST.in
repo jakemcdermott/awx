@@ -4,6 +4,9 @@ recursive-include awx *.mo
 recursive-include awx/static *
 recursive-include awx/templates *.html
 recursive-include awx/api/templates *.md *.html
+recursive-include awx/_ui/ *
+recursive-include awx/_ui/templates *.html
+recursive-include awx/_ui/static/next *
 recursive-include awx/ui/templates *.html
 recursive-include awx/ui/static *
 recursive-include awx/playbooks *.yml
