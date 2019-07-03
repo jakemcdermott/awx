@@ -86,6 +86,7 @@ def test_default_cred_types():
         'hashivault_ssh',
         'insights',
         'net',
+        'openshift_username_password',
         'openstack',
         'rhv',
         'satellite6',

@@ -226,6 +226,10 @@ class InstanceGroup(HasPolicyEditsMixin, BaseModel, RelatedJobsMixin):
     def is_isolated(self):
         return bool(self.controller)
 
+    @property
+    def is_containerized(self):
+        return bool(self.credential and self.credential.kubernetes)
+
     '''
     RelatedJobsMixin
     '''

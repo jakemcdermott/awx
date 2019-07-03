@@ -214,6 +214,7 @@ class TaskManager():
         dependencies = [{'type': get_type_for_model(type(t)), 'id': t.id} for t in dependent_tasks]
 
         controller_node = None
+        container_controller = None
         if task.supports_isolation() and rampart_group.controller_id:
             try:
                 controller_node = rampart_group.choose_online_controller_node()
@@ -221,6 +222,8 @@ class TaskManager():
                 logger.debug("No controllers available in group {} to run {}".format(
                              rampart_group.name, task.log_format))
                 return
+        elif rampart_group and rampart_group.is_containerized:
+            container_controller = random.choice(task.global_instance_groups)
 
         task.status = 'waiting'
 
@@ -250,6 +253,8 @@ class TaskManager():
                 task.controller_node = controller_node
                 logger.debug('Submitting isolated {} to queue {} controlled by {}.'.format(
                              task.log_format, task.execution_node, controller_node))
+            elif container_controller:
+                task.instance_group = rampart_group
             else:
                 task.instance_group = rampart_group
                 if instance is not None:
@@ -491,6 +496,12 @@ class TaskManager():
                 self.start_task(task, None, task.get_jobs_fail_chain(), None)
                 continue
             for rampart_group in preferred_instance_groups:
+                if task.can_run_containerized and rampart_group.is_containerized:
+                    self.graph[rampart_group.name]['graph'].add_job(task)
+                    self.start_task(task, rampart_group, task.get_jobs_fail_chain(), None)
+                    found_acceptable_queue = True
+                    break
+
                 if idle_instance_that_fits is None:
                     idle_instance_that_fits = rampart_group.find_largest_idle_instance()
                 remaining_capacity = self.get_remaining_capacity(rampart_group.name)

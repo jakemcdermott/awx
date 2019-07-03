@@ -22,6 +22,7 @@ import yaml
 import fcntl
 from pathlib import Path
 from uuid import uuid4
+import random
 try:
     import psutil
 except Exception:
@@ -1169,6 +1170,7 @@ class BaseTask(object):
 
         try:
             isolated = self.instance.is_isolated()
+            containerized = self.instance.is_containerized
             self.instance.send_notification_templates("running")
             private_data_dir = self.build_private_data_dir(self.instance)
             self.pre_run_hook(self.instance, private_data_dir)
@@ -1262,7 +1264,7 @@ class BaseTask(object):
                 if not params[v]:
                     del params[v]
 
-            if self.instance.is_isolated() is True:
+            if self.instance.is_isolated() or containerized is True:
                 module_args = None
                 if 'module_args' in params:
                     # if it's adhoc, copy the module args
@@ -1659,6 +1661,11 @@ class RunJob(BaseTask):
             if job.is_isolated() is True:
                 pu_ig = pu_ig.controller
                 pu_en = settings.CLUSTER_HOST_ID
+
+            if job.instance_group.is_containerized is True:
+                pu_ig = random.choice(job.global_instance_groups)
+                pu_en = settings.CLUSTER_HOST_ID
+
             sync_metafields = dict(
                 launch_type="sync",
                 job_type='run',
