@@ -1264,7 +1264,7 @@ class BaseTask(object):
                 if not params[v]:
                     del params[v]
 
-            if self.instance.is_isolated() or containerized is True:
+            if self.instance.is_isolated() or containerized:
                 module_args = None
                 if 'module_args' in params:
                     # if it's adhoc, copy the module args
@@ -1275,6 +1275,8 @@ class BaseTask(object):
                     params.pop('inventory'),
                     os.path.join(private_data_dir, 'inventory')
                 )
+                if containerized:
+                    params['envvars'].pop('HOME')
                 ansible_runner.utils.dump_artifacts(params)
                 isolated_manager_instance = isolated_manager.IsolatedManager(
                     cancelled_callback=lambda: self.update_model(self.instance.pk).cancel_flag,
@@ -1746,6 +1748,11 @@ class RunJob(BaseTask):
             )
         if isolated_manager_instance:
             isolated_manager_instance.cleanup()
+
+        if job.is_containerized:
+            from awx.main.scheduler.kubernetes import PodManager # prevent circular import
+            PodManager(job).delete_pod()
+
         try:
             inventory = job.inventory
         except Inventory.DoesNotExist:

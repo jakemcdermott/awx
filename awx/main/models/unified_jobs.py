@@ -1411,6 +1411,9 @@ class UnifiedJob(PolymorphicModel, PasswordFieldsModel, CommonModelNameNotUnique
         return r
 
     def get_queue_name(self):
+        if self.is_containerized is True:
+            return settings.CELERY_DEFAULT_QUEUE
+
         return self.controller_node or self.execution_node or settings.CELERY_DEFAULT_QUEUE
 
     def is_isolated(self):

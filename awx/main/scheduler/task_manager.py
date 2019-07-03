@@ -32,6 +32,7 @@ from awx.main.utils import get_type_for_model, task_manager_bulk_reschedule, sch
 from awx.main.signals import disable_activity_stream
 from awx.main.scheduler.dependency_graph import DependencyGraph
 from awx.main.utils import decrypt_field
+from awx.main.scheduler.kubernetes import PodManager
 
 
 logger = logging.getLogger('awx.main.scheduler')
@@ -255,6 +256,9 @@ class TaskManager():
                              task.log_format, task.execution_node, controller_node))
             elif container_controller:
                 task.instance_group = rampart_group
+                pod_manager = PodManager(task)
+                pod_manager.deploy_pod()
+                task.execution_node = pod_manager.pod_name
             else:
                 task.instance_group = rampart_group
                 if instance is not None:

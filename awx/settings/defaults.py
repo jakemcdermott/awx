@@ -67,6 +67,9 @@ DATABASES = {
     }
 }
 
+AWX_CONTAINER_GROUP_DEFAULT_NAMESPACE = 'awx'
+AWX_CONTAINER_GROUP_DEFAULT_IMAGE = 'gcr.io/ansible-tower-engineering/awx-runner'
+
 # Internationalization
 # https://docs.djangoproject.com/en/dev/topics/i18n/
 #

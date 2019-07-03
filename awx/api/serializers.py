@@ -4395,10 +4395,10 @@ class InstanceSerializer(BaseSerializer):
 
     class Meta:
         model = Instance
-        read_only_fields = ('uuid', 'hostname', 'version')
+        read_only_fields = ('uuid', 'hostname', 'version', 'is_containerized')
         fields = ("id", "type", "url", "related", "uuid", "hostname", "created", "modified", 'capacity_adjustment',
                   "version", "capacity", "consumed_capacity", "percent_capacity_remaining", "jobs_running", "jobs_total",
-                  "cpu", "memory", "cpu_capacity", "mem_capacity", "enabled", "managed_by_policy")
+                  "cpu", "memory", "cpu_capacity", "mem_capacity", "enabled", "managed_by_policy", "is_containerized")
 
     def get_related(self, obj):
         res = super(InstanceSerializer, self).get_related(obj)
@@ -4465,8 +4465,9 @@ class InstanceGroupSerializer(BaseSerializer):
         fields = ("id", "type", "url", "related", "name", "created", "modified",
                   "capacity", "committed_capacity", "consumed_capacity",
                   "percent_capacity_remaining", "jobs_running", "jobs_total",
-                  "instances", "controller", "is_controller", "is_isolated",
-                  "policy_instance_percentage", "policy_instance_minimum", "policy_instance_list")
+                  "instances", "controller", "is_controller", "is_isolated", "credential",
+                  "policy_instance_percentage", "policy_instance_minimum", "policy_instance_list",
+                  "pod_spec_override")
 
     def get_related(self, obj):
         res = super(InstanceGroupSerializer, self).get_related(obj)
@@ -4474,6 +4475,9 @@ class InstanceGroupSerializer(BaseSerializer):
         res['instances'] = self.reverse('api:instance_group_instance_list', kwargs={'pk': obj.pk})
         if obj.controller_id:
             res['controller'] = self.reverse('api:instance_group_detail', kwargs={'pk': obj.controller_id})
+        if obj.credential:
+            res['credential'] = self.reverse('api:credential_detail', kwargs={'pk': obj.credential_id})
+
         return res
 
     def validate_policy_instance_list(self, value):
@@ -4491,6 +4495,11 @@ class InstanceGroupSerializer(BaseSerializer):
     def validate_name(self, value):
         if self.instance and self.instance.name == 'tower' and value != 'tower':
             raise serializers.ValidationError(_('tower instance group name may not be changed.'))
+        return value
+
+    def validate_credential(self, value):
+        if not value.kubernetes:
+            raise serializers.ValidationError(_('Only Kubernetes credentials can be associated with an Instance Group'))
         return value
 
     def get_capacity_dict(self):

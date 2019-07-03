@@ -21,4 +21,9 @@ class Migration(migrations.Migration):
             name='pod_spec_override',
             field=models.TextField(blank=True, default=''),
         ),
+        migrations.AddField(
+            model_name='instance',
+            name='is_containerized',
+            field=models.BooleanField(default=False, editable=False),
+        ),
     ]
