@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='jobtemplate',
             name='ask_scm_branch_on_launch',
-            field=awx.main.fields.AskForField(default=False),
+            field=awx.main.fields.AskForField(blank=True, default=False),
         ),
         migrations.AddField(
             model_name='jobtemplate',
