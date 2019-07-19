@@ -1678,6 +1678,9 @@ class RunJob(BaseTask):
                                             job_explanation=('Previous Task Failed: {"job_type": "%s", "job_name": "%s", "job_id": "%s"}' %
                                                              ('project_update', local_project_sync.name, local_project_sync.id)))
                     raise
+                job.refresh_from_db()
+                if job.cancel_flag:
+                    return
         else:
             # Case where a local sync is not needed, meaning that local tree is
             # up-to-date with project, job is running project current version
