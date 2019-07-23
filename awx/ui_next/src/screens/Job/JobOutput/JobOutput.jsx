@@ -46,7 +46,7 @@ function range(low, high) {
 }
 
 class JobOutput extends Component {
-  listRef = React.createRef();
+  
 
   constructor(props) {
     super(props);
@@ -55,9 +55,7 @@ class JobOutput extends Component {
       contentError: null,
       hasContentLoading: true,
       results: {},
-      loadedRowCount: 0,
       currentlyLoading: [],
-      loadingRowCount: 0,
       remoteRowCount: 0,
     };
 
@@ -97,6 +95,8 @@ class JobOutput extends Component {
     }
   }
 
+  listRef = React.createRef();
+
   async loadJobEvents() {
     const { job } = this.props;
 
@@ -130,13 +130,13 @@ class JobOutput extends Component {
 
   isRowLoaded({ index }) {
     const { results, currentlyLoading } = this.state;
-    if (!!results[index]) {
+    if (results[index]) {
       return true;
     }
     return currentlyLoading.includes(index);
   }
 
-  rowRenderer({ index, parent, key, style, isScrolling }) {
+  rowRenderer({ index, parent, key, style }) {
     const { results } = this.state;
     const {
       event = 'MISSING', // this event type is client-only
@@ -165,7 +165,7 @@ class JobOutput extends Component {
     );
   }
 
-  async loadMoreRows({ startIndex, stopIndex }) {
+  loadMoreRows({ startIndex, stopIndex }) {
     const { job } = this.props;
 
     const loadRange = range(startIndex, stopIndex);
@@ -177,7 +177,7 @@ class JobOutput extends Component {
       counter__lte: stopIndex,
       order_by: 'start_line',
     };
-    return await JobsAPI.readEvents(job.id, job.type, params).then(response => {
+    return JobsAPI.readEvents(job.id, job.type, params).then(response => {
       this.setState(({ results, currentlyLoading }) => {
         response.data.results.forEach(jobEvent => {
           results[jobEvent.counter] = jobEvent;
@@ -195,8 +195,8 @@ class JobOutput extends Component {
   handleScrollPrevious() {
     const startIndex = this.listRef.Grid._renderedRowStartIndex;
     const stopIndex = this.listRef.Grid._renderedRowStopIndex;
-    const range = stopIndex - startIndex + 1;
-    this.listRef.scrollToRow(Math.max(0, startIndex - range));
+    const scrollRange = stopIndex - startIndex + 1;
+    this.listRef.scrollToRow(Math.max(0, startIndex - scrollRange));
   }
 
   handleScrollNext() {
