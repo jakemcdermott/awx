@@ -106,7 +106,7 @@ function getTimestamp({ created }) {
 }
 
 function getLineTextHtml({ created, event, start_line, stdout }) {
-  const sanitized = entities.encode(stdout);
+  const sanitized = event === 'MISSING' ? '' : entities.encode(stdout);
   return sanitized.split('\r\n').map((lineText, index) => {
     let html;
     if (hasAnsi(lineText)) {
@@ -121,19 +121,23 @@ function getLineTextHtml({ created, event, start_line, stdout }) {
     }
 
     return {
-      lineNumber: start_line + index,
+      lineNumber: event === 'MISSING' ? '...' : start_line + index,
       html,
     };
   });
 }
 
-function JobEvent({ created, event, stdout, start_line, ...rest }) {
-  return !stdout ? null : (
+function JobEvent({ counter, created, event, stdout, start_line, ...rest }) {
+  return !stdout && event !== 'MISSING' ? null : (
     <JobEventWrapper {...rest}>
       {getLineTextHtml({ created, event, start_line, stdout }).map(
         ({ lineNumber, html }) =>
-          lineNumber > 0 && (
-            <JobEventLine key={lineNumber} isFirst={lineNumber === 1}>
+          lineNumber !== 0 &&
+          counter !== 0 && (
+            <JobEventLine
+              key={`${counter}-${lineNumber}`}
+              isFirst={lineNumber === 1}
+            >
               <JobEventLineToggle />
               <JobEventLineNumber>{lineNumber}</JobEventLineNumber>
               <JobEventLineText

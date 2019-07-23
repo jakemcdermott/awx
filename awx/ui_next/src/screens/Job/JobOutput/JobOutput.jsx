@@ -37,6 +37,14 @@ const OutputFooter = styled.div`
   flex: 1;
 `;
 
+function range(low, high) {
+  const numbers = [];
+  for (let n = low; n <= high; n++) {
+    numbers.push(n);
+  }
+  return numbers;
+}
+
 class JobOutput extends Component {
   listRef = React.createRef();
 
@@ -47,9 +55,8 @@ class JobOutput extends Component {
       contentError: null,
       hasContentLoading: true,
       results: {},
-      scrollToIndex: -1,
       loadedRowCount: 0,
-      loadedRowsMap: {},
+      currentlyLoading: [],
       loadingRowCount: 0,
       remoteRowCount: 0,
     };
@@ -74,10 +81,30 @@ class JobOutput extends Component {
     this.loadJobEvents();
   }
 
+  componentDidUpdate(prevProps, prevState) {
+    // recompute row heights for any job events that have transitioned
+    // from loading to loaded
+    const { currentlyLoading } = this.state;
+    let shouldRecomputeRowHeights = false;
+    prevState.currentlyLoading
+      .filter(n => !currentlyLoading.includes(n))
+      .forEach(n => {
+        shouldRecomputeRowHeights = true;
+        this.cache.clear(n);
+      });
+    if (shouldRecomputeRowHeights) {
+      this.listRef.recomputeRowHeights();
+    }
+  }
+
   async loadJobEvents() {
     const { job } = this.props;
 
-    this.setState({ hasContentLoading: true });
+    const loadRange = range(1, 50);
+    this.setState(({ currentlyLoading }) => ({
+      hasContentLoading: true,
+      currentlyLoading: currentlyLoading.concat(loadRange),
+    }));
     try {
       const {
         data: { results: newResults = [], count },
@@ -85,7 +112,6 @@ class JobOutput extends Component {
         page_size: 50,
         order_by: 'start_line',
       });
-
       this.setState(({ results }) => {
         newResults.forEach(jobEvent => {
           results[jobEvent.counter] = jobEvent;
@@ -95,21 +121,29 @@ class JobOutput extends Component {
     } catch (err) {
       this.setState({ contentError: err });
     } finally {
-      this.setState({ hasContentLoading: false });
+      this.setState(({ currentlyLoading }) => ({
+        hasContentLoading: false,
+        currentlyLoading: currentlyLoading.filter(n => !loadRange.includes(n)),
+      }));
     }
   }
 
   isRowLoaded({ index }) {
-    const { results } = this.state;
-    return !!results[index];
+    const { results, currentlyLoading } = this.state;
+    if (!!results[index]) {
+      return true;
+    }
+    return currentlyLoading.includes(index);
   }
 
-  rowRenderer({ index, parent, key, style }) {
+  rowRenderer({ index, parent, key, style, isScrolling }) {
     const { results } = this.state;
-    if (!results[index]) {
-      return;
-    }
-    const { created, event, stdout, start_line } = results[index];
+    const {
+      event = 'MISSING', // this event type is client-only
+      created,
+      stdout,
+      start_line,
+    } = results[index] || {};
     return (
       <CellMeasurer
         key={key}
@@ -125,6 +159,7 @@ class JobOutput extends Component {
           event={event}
           start_line={start_line}
           stdout={stdout}
+          counter={index}
         />
       </CellMeasurer>
     );
@@ -133,18 +168,26 @@ class JobOutput extends Component {
   async loadMoreRows({ startIndex, stopIndex }) {
     const { job } = this.props;
 
-    let params = {
+    const loadRange = range(startIndex, stopIndex);
+    this.setState(({ currentlyLoading }) => ({
+      currentlyLoading: currentlyLoading.concat(loadRange),
+    }));
+    const params = {
       counter__gte: startIndex,
       counter__lte: stopIndex,
       order_by: 'start_line',
     };
-
     return await JobsAPI.readEvents(job.id, job.type, params).then(response => {
-      this.setState(({ results }) => {
+      this.setState(({ results, currentlyLoading }) => {
         response.data.results.forEach(jobEvent => {
           results[jobEvent.counter] = jobEvent;
         });
-        return { results };
+        return {
+          results,
+          currentlyLoading: currentlyLoading.filter(
+            n => !loadRange.includes(n)
+          ),
+        };
       });
     });
   }
@@ -168,7 +211,6 @@ class JobOutput extends Component {
   handleScrollBottom() {
     const { remoteRowCount } = this.state;
     this.listRef.scrollToRow(remoteRowCount - 1);
-    this.setState({ scrollToIndex: remoteRowCount - 1 });
   }
 
   handleResize({ width }) {
@@ -181,12 +223,7 @@ class JobOutput extends Component {
 
   render() {
     const { job } = this.props;
-    const {
-      hasContentLoading,
-      contentError,
-      scrollToIndex,
-      remoteRowCount,
-    } = this.state;
+    const { hasContentLoading, contentError, remoteRowCount } = this.state;
 
     if (hasContentLoading) {
       return <ContentLoading />;
@@ -229,8 +266,8 @@ class JobOutput extends Component {
                       rowHeight={this.cache.rowHeight}
                       rowRenderer={this.rowRenderer}
                       scrollToAlignment="start"
-                      scrollToIndex={scrollToIndex}
                       width={width}
+                      overscanRowCount={20}
                     />
                   );
                 }}
