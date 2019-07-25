@@ -1475,7 +1475,14 @@ class RunJob(BaseTask):
             if authorize:
                 env['ANSIBLE_NET_AUTH_PASS'] = network_cred.get_input('authorize_password', default='')
 
-        env['ANSIBLE_COLLECTIONS_PATHS'] = os.path.join(private_data_dir, 'requirements_collections')
+        for env_key, folder in (
+                ('ANSIBLE_COLLECTIONS_PATHS', 'requirements_collections'),
+                ('ANSIBLE_ROLES_PATH', 'requirements_roles')):
+            paths = []
+            if env_key in env:
+                paths.append(env[env_key])
+            paths.append(os.path.join(private_data_dir, folder))
+            env[env_key] = os.pathsep.join(paths)
 
         return env
 
@@ -1641,7 +1648,6 @@ class RunJob(BaseTask):
                 logger.debug('Running project sync for {} because of galaxy role requirements.'.format(job.log_format))
                 needs_sync = True
 
-        galaxy_install_path = None
         if needs_sync:
             pu_ig = job.instance_group
             pu_en = job.execution_node
@@ -1663,13 +1669,10 @@ class RunJob(BaseTask):
             # cancel() call on the job can cancel the project update
             job = self.update_model(job.pk, project_update=local_project_sync)
 
-            # Save the roles from galaxy to a temporary directory to be moved later
-            # at this point, the project folder has not yet been coppied into the temporary directory
-            galaxy_install_path = tempfile.mkdtemp(prefix='tmp_roles_', dir=private_data_dir)
-            os.chmod(galaxy_install_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
             project_update_task = local_project_sync._get_task_class()
             try:
-                sync_task = project_update_task(job_private_data_dir=private_data_dir, roles_destination=galaxy_install_path)
+                # the job private_data_dir is passed so sync can download roles and collections there
+                sync_task = project_update_task(job_private_data_dir=private_data_dir)
                 sync_task.run(local_project_sync.id)
                 local_project_sync.refresh_from_db()
                 job = self.update_model(job.pk, scm_revision=local_project_sync.scm_revision)
@@ -1705,10 +1708,6 @@ class RunJob(BaseTask):
             git_repo.delete_head(tmp_branch_name, force=True)
         else:
             copy_tree(project_path, runner_project_folder)
-        if galaxy_install_path and os.listdir(galaxy_install_path):
-            logger.debug('Copying galaxy roles for {} to tmp directory'.format(job.log_format))
-            galaxy_run_path = os.path.join(private_data_dir, 'project', 'roles')
-            copy_tree(galaxy_install_path, galaxy_run_path)
 
         if job.inventory.kind == 'smart':
             # cache smart inventory memberships so that the host_filter query is not
@@ -1751,11 +1750,10 @@ class RunProjectUpdate(BaseTask):
             show_paths.append(self.job_private_data_dir)
         return show_paths
 
-    def __init__(self, *args, job_private_data_dir=None, roles_destination=None, **kwargs):
+    def __init__(self, *args, job_private_data_dir=None, **kwargs):
         super(RunProjectUpdate, self).__init__(*args, **kwargs)
         self.playbook_new_revision = None
         self.job_private_data_dir = job_private_data_dir
-        self.roles_destination = roles_destination
 
     def event_handler(self, event_data):
         super(RunProjectUpdate, self).event_handler(event_data)
@@ -1786,7 +1784,9 @@ class RunProjectUpdate(BaseTask):
 
         # Create dir where collections will live for the job run
         if project_update.job_type != 'check' and getattr(self, 'job_private_data_dir'):
-            os.mkdir(os.path.join(self.job_private_data_dir, 'requirements_collections'), stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
+            for folder_name in ('requirements_collections', 'requirements_roles'):
+                folder_path = os.path.join(self.job_private_data_dir, folder_name)
+                os.mkdir(folder_path, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
         return private_data
 
     def build_passwords(self, project_update, runtime_passwords):
@@ -1904,14 +1904,13 @@ class RunProjectUpdate(BaseTask):
         })
         if project_update.job_type != 'check':
             extra_vars['collections_destination'] = os.path.join(self.job_private_data_dir, 'requirements_collections')
+            extra_vars['roles_destination'] = os.path.join(self.job_private_data_dir, 'requirements_roles')
         # apply custom refspec from user for PR refs and the like
         if project_update.scm_refspec:
             extra_vars['scm_refspec'] = project_update.scm_refspec
         elif project_update.project.allow_override:
             # If branch is override-able, do extra fetch for all branches
             extra_vars['scm_refspec'] = 'refs/heads/*:refs/remotes/origin/*'
-        if self.roles_destination:
-            extra_vars['roles_destination'] = self.roles_destination
         self._write_extra_vars_file(private_data_dir, extra_vars)
 
     def build_cwd(self, project_update, private_data_dir):
