@@ -103,7 +103,9 @@ describe('<OrganizationAccess />', () => {
     expect(wrapper.find('OrganizationAccess').state('hasContentLoading')).toBe(
       false
     );
-    expect(wrapper.find('OrganizationAccess').state('hasContentError')).toBe(false);
+    expect(wrapper.find('OrganizationAccess').state('hasContentError')).toBe(
+      false
+    );
     done();
   });
 
