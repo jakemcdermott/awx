@@ -1626,7 +1626,7 @@ class RunJob(BaseTask):
             needs_sync = False
         elif not os.path.exists(project_path):
             logger.debug('Performing fresh clone of {} on this instance.'.format(job.project))
-        elif job.project.scm_revision:
+        elif not job.project.scm_revision:
             logger.debug('Revision not known for {}, will sync with remote'.format(job.project))
         elif job.project.scm_type == 'git':
             git_repo = git.Repo(project_path)
@@ -1634,10 +1634,11 @@ class RunJob(BaseTask):
                 desired_revision = job.project.scm_revision
                 if job.scm_branch and job.scm_branch != job.project.scm_branch:
                     desired_revision = job.scm_branch  # could be commit or not, but will try as commit
-                commit = git_repo.commit(desired_revision)
-                job_revision = commit.hexsha
-                logger.info('Skipping project sync for {} because commit is locally available'.format(job.log_format))
-                needs_sync = False
+                current_revision = git_repo.head.commit.hexsha
+                if desired_revision == current_revision:
+                    job_revision = desired_revision
+                    logger.info('Skipping project sync for {} because commit is locally available'.format(job.log_format))
+                    needs_sync = False
             except (ValueError, BadGitName):
                 logger.debug('Needed commit for {} not in local source tree, will sync with remote'.format(job.log_format))
         # Galaxy requirements are not supported for manual projects
