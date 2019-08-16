@@ -106,16 +106,15 @@ class MultiSelect extends Component {
     const { input, chipItems } = this.state;
     const { onAddNewItem } = this.props;
     const newChip = { name: input, id: Math.random() };
-    if (event.key !== 'Tab') {
-      return;
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.setState({
+        chipItems: chipItems.concat(newChip),
+        isExpanded: false,
+        input: '',
+      });
+      onAddNewItem(input);
     }
-    this.setState({
-      chipItems: chipItems.concat(newChip),
-      isExpanded: false,
-      input: '',
-    });
-
-    onAddNewItem(input);
   }
 
   handleInputChange(e) {

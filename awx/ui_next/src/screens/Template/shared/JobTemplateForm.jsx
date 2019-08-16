@@ -100,8 +100,7 @@ class JobTemplateForm extends Component {
   }
 
   handleNewLabel(label) {
-    const { newLabels } = this.state;
-    const { template } = this.props;
+    const { newLabels, loadedLabels } = this.state;
     const isIncluded = newLabels.some(newLabel => newLabel.name === label.name);
     if (isIncluded) {
       const filteredLabels = newLabels.filter(
@@ -114,7 +113,7 @@ class JobTemplateForm extends Component {
           ...newLabels,
           {
             name: label,
-            organization: template.summary_fields.inventory.organization_id,
+            organization: loadedLabels[0].organization,
           },
         ],
       });

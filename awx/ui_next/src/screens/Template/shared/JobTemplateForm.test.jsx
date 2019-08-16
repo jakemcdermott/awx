@@ -135,7 +135,11 @@ describe('<JobTemplateForm />', () => {
       _JobTemplateForm.prototype,
       'handleNewLabel'
     );
-    const event = { key: 'Tab' };
+    const event = {
+      key: 'Enter',
+      preventDefault: () => {},
+    };
+    const loadedLabels = [{ name: 'Apollo', organization: 4 }];
     const wrapper = mountWithContexts(
       <JobTemplateForm
         template={mockData}
@@ -147,14 +151,15 @@ describe('<JobTemplateForm />', () => {
     const multiSelect = wrapper.find('MultiSelect');
     const component = wrapper.find('JobTemplateForm');
 
-    wrapper.setState({ newLabels: [], loadedLabels: [], removedLabels: [] });
+    component.setState({ newLabels: [], loadedLabels, removedLabels: [] });
     multiSelect.setState({ input: 'Foo' });
+    component.update();
     component.find('input[aria-label="labels"]').prop('onKeyDown')(event);
     expect(handleNewLabel).toHaveBeenCalledWith('Foo');
 
     component.instance().handleNewLabel({ name: 'Bar', id: 2 });
     expect(component.state().newLabels).toEqual([
-      { name: 'Foo', organization: 1 },
+      { name: 'Foo', organization: 4 },
       { associate: true, id: 2, name: 'Bar' },
     ]);
     done();
