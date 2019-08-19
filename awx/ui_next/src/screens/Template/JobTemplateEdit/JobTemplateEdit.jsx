@@ -104,17 +104,30 @@ class JobTemplateEdit extends Component {
 
   async submitLabels(newLabels, removedLabels) {
     const {
-      template: { id },
+      template,
     } = this.props;
-    const disassociationPromises = removedLabels.map(label =>
-      JobTemplatesAPI.disassociateLabel(id, label)
+    const disassociationPromises = removedLabels.map(label => {
+      const labelObject = {disassociate: true, id: label.id}
+      return JobTemplatesAPI.disassociateLabel(template.id, labelObject)
+    }
     );
     const associationPromises = newLabels
-      .filter(label => !label.organization)
-      .map(label => JobTemplatesAPI.associateLabel(id, label));
+      .filter(label => label.id)
+      .map(label => {
+        const labelObject = {
+          associate: true, id: label.id
+        }
+        return JobTemplatesAPI.associateLabel(template.id, labelObject)
+      });
     const creationPromises = newLabels
-      .filter(label => label.organization)
-      .map(label => JobTemplatesAPI.generateLabel(id, label));
+      .filter(label => !label.id)
+      .map(label => {
+        const labelObject = {
+          name: label, organization:
+            template.summary_fields.inventory.organization_id
+        }
+        return JobTemplatesAPI.generateLabel(template.id, labelObject)
+      });
 
     const results = await Promise.all([
       ...disassociationPromises,

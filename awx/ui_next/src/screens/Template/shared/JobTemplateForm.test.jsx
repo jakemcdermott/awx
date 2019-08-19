@@ -159,8 +159,8 @@ describe('<JobTemplateForm />', () => {
 
     component.instance().handleNewLabel({ name: 'Bar', id: 2 });
     expect(component.state().newLabels).toEqual([
-      { name: 'Foo', organization: 4 },
-      { associate: true, id: 2, name: 'Bar' },
+      'Foo',
+      { name: 'Bar', id: 2 },
     ]);
     done();
   });

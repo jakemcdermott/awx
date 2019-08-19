@@ -73,8 +73,8 @@ class JobTemplateForm extends Component {
 
   async loadLabels(QueryConfig) {
     // This function assumes that the user has no more than 400
-    // labels. For the vast majority of users this will be more thans
-    // enough.This can be updated to allow more than 400 labels if we
+    // labels. For the vast majority of users this will be more than
+    // enough. This can be updated to allow more than 400 labels if we
     // decide it is necessary.
     this.setState({ contentError: null, hasContentLoading: true });
     let loadedLabels;
@@ -100,30 +100,22 @@ class JobTemplateForm extends Component {
   }
 
   handleNewLabel(label) {
-    const { newLabels, loadedLabels } = this.state;
-    const isIncluded = newLabels.some(newLabel => newLabel.name === label.name);
+    const { newLabels, removedLabels } = this.state;
+    const isIncluded = newLabels.some(nL => nL.name === label.name);
+    const isInRemovedLabels = removedLabels.some(rL =>
+      rL.name === label.name)
     if (isIncluded) {
       const filteredLabels = newLabels.filter(
-        newLabel => newLabel.name !== label
+        nL => nL.name !== label
       );
       this.setState({ newLabels: filteredLabels });
-    } else if (typeof label === 'string') {
-      this.setState({
-        newLabels: [
-          ...newLabels,
-          {
-            name: label,
-            organization: loadedLabels[0].organization,
-          },
-        ],
-      });
+    } else if (isInRemovedLabels) {
+      const filteredLabels = removedLabels.filter(rL => rL.id !== label.id)
+      this.setState({ removedLabels: filteredLabels, newLabels: newLabels.concat(label) })
     } else {
       this.setState({
-        newLabels: [
-          ...newLabels,
-          { name: label.name, associate: true, id: label.id },
-        ],
-      });
+        newLabels: newLabels.concat(label)
+      })
     }
   }
 
@@ -137,10 +129,7 @@ class JobTemplateForm extends Component {
 
     if (isAssociatedLabel) {
       this.setState({
-        removedLabels: removedLabels.concat({
-          disassociate: true,
-          id: label.id,
-        }),
+        removedLabels: removedLabels.concat(label),
       });
     } else {
       const filteredLabels = newLabels.filter(

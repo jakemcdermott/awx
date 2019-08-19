@@ -70,16 +70,20 @@ describe('<JobTemplateAdd />', () => {
       playbook: 'Bar',
       project: 2,
     };
+    const newLabels = ['Potato']
     JobTemplatesAPI.create.mockResolvedValueOnce({
       data: {
         id: 1,
         ...jobTemplateData,
-      },
+        summary_fields: {
+        inventory: { organization_id: 23}
+      }},
     });
     const wrapper = mountWithContexts(<JobTemplateAdd />);
     await waitForElement(wrapper, 'EmptyStateBody', el => el.length === 0);
-    wrapper.find('JobTemplateForm').prop('handleSubmit')(jobTemplateData);
+    await wrapper.find('JobTemplateForm').prop('handleSubmit')(jobTemplateData, newLabels);
     expect(JobTemplatesAPI.create).toHaveBeenCalledWith(jobTemplateData);
+    expect(JobTemplatesAPI.generateLabel).toHaveBeenCalledWith(1, {name: 'Potato', organization: 23})
     done();
   });
 

@@ -76,7 +76,6 @@ class MultiSelect extends Component {
     return associatedItems.map(item => ({
       name: item.name,
       id: item.id,
-      organization: item.organization,
     }));
   }
 

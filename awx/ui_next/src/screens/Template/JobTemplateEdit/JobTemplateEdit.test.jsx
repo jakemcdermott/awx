@@ -21,6 +21,9 @@ const mockJobTemplate = {
     labels: {
       results: [{ name: 'Sushi', id: 1 }, { name: 'Major', id: 2 }],
     },
+    inventory: {
+      organization_id: 1
+    }
   },
 };
 
@@ -99,14 +102,13 @@ describe('<JobTemplateEdit />', () => {
       job_type: 'check',
     };
     const newLabels = [
-      { associate: true, id: 3 },
-      { associate: true, id: 3 },
-      { name: 'Mapel', organization: 1 },
-      { name: 'Tree', organization: 1 },
+      { name: 'Walnut', id: 3 },
+      { name:'Pecan', id: 3 },
+      'Mapel', 'Tree'
     ];
     const removedLabels = [
-      { disassociate: true, id: 1 },
-      { disassociate: true, id: 2 },
+      { name: 'Pine', id: 1 },
+      { name: 'Magnolia', id: 2 },
     ];
 
     await wrapper.find('JobTemplateForm').prop('handleSubmit')(
