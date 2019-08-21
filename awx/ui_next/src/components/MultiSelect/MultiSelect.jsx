@@ -58,12 +58,13 @@ class MultiSelect extends Component {
     };
     this.handleAddItem = this.handleAddItem.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
-    this.handleSelection = this.handleSelection.bind(this);
     this.removeChip = this.removeChip.bind(this);
     this.handleClick = this.handleClick.bind(this);
   }
 
   componentDidMount() {
+    // The event listener added below is used to check whether the user clicks inside, or outside
+    // the multiSelect component and then close the dropdown as necessary.
     document.addEventListener('mousedown', this.handleClick, false);
   }
 
@@ -79,11 +80,9 @@ class MultiSelect extends Component {
     }));
   }
 
-  handleClick(e, option) {
-    if (this.node && this.node.contains(e.target)) {
-      if (option) {
-        this.handleSelection(e, option);
-      }
+  handleClick(event) {
+    if (event.target.value) {
+      this.handleSelection(event, event.target.value);
     } else {
       this.setState({ isExpanded: false });
     }
@@ -92,11 +91,14 @@ class MultiSelect extends Component {
   handleSelection(e, item) {
     const { chipItems } = this.state;
     const { onAddNewItem } = this.props;
-    e.preventDefault();
 
     this.setState({
-      chipItems: chipItems.concat({ name: item.name, id: item.id }),
+      chipItems: chipItems.concat({
+        name: item.name || item,
+        id: item.id || Math.random(),
+      }),
       isExpanded: false,
+      input: '',
     });
     onAddNewItem(item);
   }
@@ -104,11 +106,15 @@ class MultiSelect extends Component {
   handleAddItem(event) {
     const { input, chipItems } = this.state;
     const { onAddNewItem } = this.props;
-    const newChip = { name: input, id: Math.random() };
+    const isIncluded = chipItems.some(chipItem => chipItem.name === input);
+    if (isIncluded) {
+      this.setState({ input: '', isExpanded: false });
+      return;
+    }
     if (event.key === 'Enter') {
       event.preventDefault();
       this.setState({
-        chipItems: chipItems.concat(newChip),
+        chipItems: chipItems.concat({ name: input, id: Math.random() }),
         isExpanded: false,
         input: '',
       });
@@ -127,37 +133,32 @@ class MultiSelect extends Component {
 
     this.setState({ chipItems: chips });
     onRemoveItem(item);
-
-    e.preventDefault();
   }
 
   render() {
     const { options } = this.props;
     const { chipItems, input, isExpanded } = this.state;
 
-    const list = options.map(option => (
-      <Fragment key={option.id}>
-        {option.name.includes(input) ? (
-          <DropdownItem
-            component="button"
-            isDisabled={chipItems.some(item => item.id === option.id)}
-            value={option.name}
-            onClick={e => {
-              this.handleClick(e, option);
-            }}
-          >
-            {option.name}
-          </DropdownItem>
-        ) : null}
-      </Fragment>
-    ));
+    const list = options
+      .filter(filteredOption => filteredOption.name.includes(input))
+      .map(option => (
+        <DropdownItem
+          key={option.id}
+          component="button"
+          isDisabled={chipItems.some(item => item.id === option.id)}
+          value={option.name}
+          onClick={this.handleClick}
+        >
+          {option.name}
+        </DropdownItem>
+      ));
 
     const chips = (
       <ChipGroup>
         {chipItems &&
           chipItems.map(item => (
             <Chip
-              key={item.id}
+              key={item.id || Math.random()}
               onClick={e => {
                 this.removeChip(e, item);
               }}
@@ -190,7 +191,20 @@ class MultiSelect extends Component {
               toggle={<DropdownToggle isPlain>Labels</DropdownToggle>}
               // Above is not rendered but is a required prop from Patternfly
               isOpen={isExpanded}
-              dropdownItems={list}
+              dropdownItems={
+                list.length > 0
+                  ? list
+                  : [
+                      <DropdownItem
+                        key={Math.random()}
+                        value={input}
+                        component="button"
+                        onClick={this.handleClick}
+                      >
+                        {input}
+                      </DropdownItem>,
+                    ]
+              }
             />
           </div>
           <div css="margin: 10px">{chips}</div>
