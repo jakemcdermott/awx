@@ -16,7 +16,7 @@ import { JobTemplatesAPI } from '@api';
 function JobTemplateAdd({ history, i18n }) {
   const [error, setError] = useState(null);
 
-  const handleSubmit = async (values, newLabels=[]) => {
+  const handleSubmit = async (values, newLabels = []) => {
     setError(null);
     try {
       const { data } = await JobTemplatesAPI.create(values);
@@ -28,28 +28,29 @@ function JobTemplateAdd({ history, i18n }) {
   };
   const submitLabels = async (template, newLabels) => {
     const associationPromises = newLabels
-    .filter(label => label.id)
-    .map(label => {
-      const labelObject = {
-        associate: true, id: label.id
-      }
-      return JobTemplatesAPI.associateLabel(template.id, labelObject)
-    });
-  const creationPromises = newLabels
-    .filter(label => !label.id)
-    .map(label => {
-      const labelObject = {
-        name: label, organization:
-          template.summary_fields.inventory.organization_id
-      }
-      return JobTemplatesAPI.generateLabel(template.id, labelObject)
-    });
+      .filter(label => label.id)
+      .map(label => {
+        const labelObject = {
+          associate: true,
+          id: label.id,
+        };
+        return JobTemplatesAPI.associateLabel(template.id, labelObject);
+      });
+    const creationPromises = newLabels
+      .filter(label => !label.id)
+      .map(label => {
+        const labelObject = {
+          name: label,
+          organization: template.summary_fields.inventory.organization_id,
+        };
+        return JobTemplatesAPI.generateLabel(template.id, labelObject);
+      });
     const results = await Promise.all([
       ...associationPromises,
       ...creationPromises,
     ]);
     return results;
-  }
+  };
 
   const handleCancel = () => {
     history.push(`/templates`);

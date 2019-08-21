@@ -22,8 +22,8 @@ const mockJobTemplate = {
       results: [{ name: 'Sushi', id: 1 }, { name: 'Major', id: 2 }],
     },
     inventory: {
-      organization_id: 1
-    }
+      organization_id: 1,
+    },
   },
 };
 
@@ -103,8 +103,9 @@ describe('<JobTemplateEdit />', () => {
     };
     const newLabels = [
       { name: 'Walnut', id: 3 },
-      { name:'Pecan', id: 3 },
-      'Mapel', 'Tree'
+      { name: 'Pecan', id: 3 },
+      'Mapel',
+      'Tree',
     ];
     const removedLabels = [
       { name: 'Pine', id: 1 },

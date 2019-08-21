@@ -102,20 +102,20 @@ class JobTemplateForm extends Component {
   handleNewLabel(label) {
     const { newLabels, removedLabels } = this.state;
     const isIncluded = newLabels.some(nL => nL.name === label.name);
-    const isInRemovedLabels = removedLabels.some(rL =>
-      rL.name === label.name)
+    const isInRemovedLabels = removedLabels.some(rL => rL.name === label.name);
     if (isIncluded) {
-      const filteredLabels = newLabels.filter(
-        nL => nL.name !== label
-      );
+      const filteredLabels = newLabels.filter(nL => nL.name !== label);
       this.setState({ newLabels: filteredLabels });
     } else if (isInRemovedLabels) {
-      const filteredLabels = removedLabels.filter(rL => rL.id !== label.id)
-      this.setState({ removedLabels: filteredLabels, newLabels: newLabels.concat(label) })
+      const filteredLabels = removedLabels.filter(rL => rL.id !== label.id);
+      this.setState({
+        removedLabels: filteredLabels,
+        newLabels: newLabels.concat(label),
+      });
     } else {
       this.setState({
-        newLabels: newLabels.concat(label)
-      })
+        newLabels: newLabels.concat(label),
+      });
     }
   }
 
