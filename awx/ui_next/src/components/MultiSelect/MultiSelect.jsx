@@ -91,11 +91,17 @@ class MultiSelect extends Component {
   handleSelection(e, item) {
     const { chipItems } = this.state;
     const { onAddNewItem } = this.props;
-
+    const isIncluded = chipItems.some(
+      chipItem => chipItem.name === item.name || chipItem.name === item
+    );
+    if (isIncluded) {
+      this.setState({ input: '', isExpanded: false });
+      return;
+    }
     this.setState({
       chipItems: chipItems.concat({
         name: item.name || item,
-        id: item.id || Math.random(),
+        id: item.id || item,
       }),
       isExpanded: false,
       input: '',
@@ -108,13 +114,16 @@ class MultiSelect extends Component {
     const { onAddNewItem } = this.props;
     const isIncluded = chipItems.some(chipItem => chipItem.name === input);
     if (isIncluded) {
+      // This event.preventDefault prevents the form from submitting
+      // if the user tries to create 2 chips of the same name
+      event.preventDefault();
       this.setState({ input: '', isExpanded: false });
       return;
     }
     if (event.key === 'Enter') {
       event.preventDefault();
       this.setState({
-        chipItems: chipItems.concat({ name: input, id: Math.random() }),
+        chipItems: chipItems.concat({ name: input, id: input }),
         isExpanded: false,
         input: '',
       });
@@ -158,7 +167,7 @@ class MultiSelect extends Component {
         {chipItems &&
           chipItems.map(item => (
             <Chip
-              key={item.id || Math.random()}
+              key={item.id}
               onClick={e => {
                 this.removeChip(e, item);
               }}
@@ -196,7 +205,7 @@ class MultiSelect extends Component {
                   ? list
                   : [
                       <DropdownItem
-                        key={Math.random()}
+                        key={input}
                         value={input}
                         component="button"
                         onClick={this.handleClick}

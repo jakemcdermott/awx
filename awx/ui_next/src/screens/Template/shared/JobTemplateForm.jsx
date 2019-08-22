@@ -133,7 +133,7 @@ class JobTemplateForm extends Component {
       });
     } else {
       const filteredLabels = newLabels.filter(
-        newLabel => newLabel.name !== label.name
+        newLabel => newLabel !== label.name
       );
       this.setState({ newLabels: filteredLabels });
     }
