@@ -1,5 +1,10 @@
-import { templateUrl } from '../shared/template-url/template-url.factory';
+import {
+    templateUrl
+} from '../shared/template-url/template-url.factory';
 import CapacityAdjuster from './capacity-adjuster/capacity-adjuster.directive';
+import AddContainerGroup from './container-groups/add-container-group.view.html'
+import AddContainerGroupController from './container-groups/add-container-group.controller'
+import CredentialModalTemplate from './container-groups/credential-type-modal.partial.html'
 import CapacityBar from './capacity-bar/capacity-bar.directive';
 import instanceGroupsMultiselect from '../shared/instance-groups-multiselect/instance-groups.directive';
 import instanceGroupsModal from '../shared/instance-groups-multiselect/instance-groups-modal/instance-groups-modal.directive';
@@ -24,10 +29,14 @@ import InstanceGroupsStrings from './instance-groups.strings';
 
 import instanceGroupJobsRoute from '~features/jobs/routes/instanceGroupJobs.route.js';
 import instanceJobsRoute from '~features/jobs/routes/instanceJobs.route.js';
+const addEditTemplate = require('~features/applications/add-edit-applications.view.html');
+import AddController from '/Users/acorey/Ansible/awx/awx/ui/client/features/applications/add-applications.controller';
+
+
 
 const MODULE_NAME = 'instanceGroups';
 
-function InstanceGroupsResolve ($q, $stateParams, InstanceGroup, Instance, ProcessErrors, strings) {
+function InstanceGroupsResolve($q, $stateParams, InstanceGroup, Instance, Organization, ProcessErrors, strings) {
     const instanceGroupId = $stateParams.instance_group_id;
     const instanceId = $stateParams.instance_id;
     let promises = {};
@@ -39,20 +48,39 @@ function InstanceGroupsResolve ($q, $stateParams, InstanceGroup, Instance, Proce
 
     if (instanceGroupId && instanceId) {
         promises.instance = new Instance(['get', 'options'], [instanceId, instanceId])
-            .then((instance) => instance.extend('get', 'jobs', {params: {page_size: "10", order_by: "-finished"}}));
+            .then((instance) => instance.extend('get', 'jobs', {
+                params: {
+                    page_size: "10",
+                    order_by: "-finished"
+                }
+            }));
         return $q.all(promises);
     }
 
     promises.instanceGroup = new InstanceGroup(['get', 'options'], [instanceGroupId, instanceGroupId])
-            .then((instanceGroup) =>  instanceGroup.extend('get', 'jobs', {params: {page_size: "10", order_by: "-finished"}}))
-            .then((instanceGroup) =>  instanceGroup.extend('get', 'instances'));
+        .then((instanceGroup) => instanceGroup.extend('get', 'jobs', {
+            params: {
+                page_size: "10",
+                order_by: "-finished"
+            }
+        }))
+        .then((instanceGroup) => instanceGroup.extend('get', 'instances'));
+
+    promises.organization = new Organization();
 
     return $q.all(promises)
         .then(models => models)
-        .catch(({ data, status, config }) => {
+        .catch(({
+            data,
+            status,
+            config
+        }) => {
             ProcessErrors(null, data, status, null, {
                 hdr: strings.get('error.HEADER'),
-                msg: strings.get('error.CALL', { path: `${config.url}`, status })
+                msg: strings.get('error.CALL', {
+                    path: `${config.url}`,
+                    status
+                })
             });
             return $q.reject();
         });
@@ -63,11 +91,12 @@ InstanceGroupsResolve.$inject = [
     '$stateParams',
     'InstanceGroupModel',
     'InstanceModel',
+    'OrganizationModel',
     'ProcessErrors',
     'InstanceGroupsStrings'
 ];
 
-function InstanceGroupsRun ($stateExtender, strings) {
+function InstanceGroupsRun($stateExtender, strings, Rest) {
     $stateExtender.addState({
         name: 'instanceGroups',
         url: '/instance_groups',
@@ -100,7 +129,7 @@ function InstanceGroupsRun ($stateExtender, strings) {
         resolve: {
             resolvedModels: InstanceGroupsResolve,
             Dataset: ['InstanceGroupList', 'QuerySet', '$stateParams', 'GetBasePath',
-                function(list, qs, $stateParams, GetBasePath) {
+                function (list, qs, $stateParams, GetBasePath) {
                     let path = GetBasePath(list.basePath) || GetBasePath(list.name);
                     return qs.search(path, $stateParams[`${list.iterator}_search`]);
                 }
@@ -143,7 +172,85 @@ function InstanceGroupsRun ($stateExtender, strings) {
             ]
         }
     });
+    $stateExtender.addState({
+        name: 'instanceGroups.addContainerGroup',
+        url: '/add_container_group',
+        views: {
+            'addContainerGroup@instanceGroups': {
+                templateUrl: AddContainerGroup,
+                controller: AddContainerGroupController,
+                controllerAs: 'vm'
+            }
+        },
+        resolve: {
+            resolvedModels: InstanceGroupsResolve,
+            CredTypesList: ['Rest', 'GetBasePath', (Rest, GetBasePath) => {
+                const params = {
+                    namespace: 'kubernetes_bearer_token'
+                };
+                Rest.setUrl(`${GetBasePath('credential_types')}`)
+                return Rest.get({
+                    params
+                })
+            }]
+        },
+        ncyBreadcrumb: {
+            label: strings.get('state.ADD_CONTAINER_GROUP_BREADCRUMB_LABEL')
+        },
+    });
 
+    $stateExtender.addState({
+        name: 'instanceGroups.addContainerGroup.credentialType',
+        url: '/credential_type?selected',
+        searchPrefix: 'container_group',
+        params: {
+            credential_type_search: {
+                value: {
+                    page_size: 5,
+                    order_by: 'name',
+                    namespace: 'kubernetes_bearer_token'
+                },
+                dynamic: true,
+                squash: ''
+            }
+        },
+        data: {
+            basePath: 'credential_types',
+            formChildState: true
+        },
+        ncyBreadcrumb: {
+            skip: true
+        },
+        views: {
+            'credentialType@instanceGroups.addContainerGroup': {
+                templateProvider: (ListDefinition, generateList) => {
+                    const html = generateList.build({
+                        mode: 'lookup',
+                        list: ListDefinition,
+                        input_type: 'radio'
+                    });
+                    console.log(html, 'views')
+                    return `<lookup-modal>${html}</lookup-modal>`;
+                }
+            }
+        },
+        resolve: {
+            ListDefinition: ['CredentialTypesList', list => list],
+            Dataset: ['ListDefinition', 'QuerySet', '$stateParams', 'GetBasePath',
+                (list, qs, $stateParams, GetBasePath) => qs.search(
+                    GetBasePath('credential_types'),
+                    $stateParams[`${list.iterator}_search`]
+                )
+            ]
+        },
+        onExit ($state) {
+            if ($state.transition) {
+                $('#form-modal').modal('hide');
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+            }
+        }
+    });
     $stateExtender.addState({
         name: 'instanceGroups.edit',
         route: '/:instance_group_id',
@@ -207,7 +314,7 @@ function InstanceGroupsRun ($stateExtender, strings) {
         resolve: {
             resolvedModels: InstanceGroupsResolve,
             Dataset: ['GetBasePath', 'QuerySet', '$stateParams',
-                function(GetBasePath, qs, $stateParams) {
+                function (GetBasePath, qs, $stateParams) {
                     let path = `${GetBasePath('instance_groups')}${$stateParams.instance_group_id}/instances`;
                     return qs.search(path, $stateParams[`instance_search`]);
                 }
@@ -255,7 +362,7 @@ function InstanceGroupsRun ($stateExtender, strings) {
         resolve: {
             resolvedModels: InstanceGroupsResolve,
             Dataset: ['GetBasePath', 'QuerySet', '$stateParams',
-                function(GetBasePath, qs, $stateParams) {
+                function (GetBasePath, qs, $stateParams) {
                     let path = `${GetBasePath('instances')}`;
                     return qs.search(path, $stateParams[`add_instance_search`]);
                 }
@@ -269,7 +376,8 @@ function InstanceGroupsRun ($stateExtender, strings) {
 
 InstanceGroupsRun.$inject = [
     '$stateExtender',
-    'InstanceGroupsStrings'
+    'InstanceGroupsStrings',
+    'Rest'
 ];
 
 angular.module(MODULE_NAME, [])

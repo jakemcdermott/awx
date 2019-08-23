@@ -1,0 +1,25 @@
+<at-panel>
+  <at-panel-heading title="{{:: vm.panelTitle }}"></at-panel-heading>
+  <at-panel-body>
+    <at-form state="vm.form" autocomplete="off">
+      <at-input-text col="4" tab="1" state="vm.form.name"></at-input-text>
+      <!-- <at-input-text col="4" tab="1" state="vm.form.description"></at-input-text> -->
+      <!-- <at-input-lookup col="4" tab="3" ng-click="$state.go('instanceGroups.addContainerGroup.modal.add')"
+        placeholder="placeholder"
+        state="vm.form.credential"
+        ng-attr-placeholder="{{vm.selectedRow.associate}}"
+        id="instanceGroups_organization_group">
+      </at-input-lookup> -->
+      <at-input-lookup col="4" tab="3" state="vm.form.credential" id="containter_groups_credential"></at-input-lookup >
+      <!-- <at-code-mirror
+        state="vm.form.credential"
+        class="JobResults-resultRow">
+      </at-code-mirror> -->
+      <at-action-group col="12" pos="right">
+        <at-form-action type="cancel" to="instanceGroups"></at-form-action>
+        <at-form-action type="save"></at-form-action>
+      </at-action-group>
+      <div ui-view="credentialType"></div>
+    </at-form>
+  </at-panel-body>
+</at-panel>
