@@ -81,7 +81,8 @@ class MultiSelect extends Component {
   }
 
   handleClick(event) {
-    if (event.target.value) {
+    if (this.node.contains(event.target)) {
+      // we get get here if user has clicked inside the component
       this.handleSelection(event, event.target.value);
     } else {
       this.setState({ isExpanded: false });
