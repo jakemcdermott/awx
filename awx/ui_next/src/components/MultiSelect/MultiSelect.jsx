@@ -81,7 +81,7 @@ class MultiSelect extends Component {
   }
 
   handleClick(event) {
-    if (this.node.contains(event.target)) {
+    if (this.node.contains(event.target) && event.target.value) {
       // we get get here if user has clicked inside the component
       this.handleSelection(event, event.target.value);
     } else {
@@ -114,6 +114,13 @@ class MultiSelect extends Component {
     const { input, chipItems } = this.state;
     const { onAddNewItem } = this.props;
     const isIncluded = chipItems.some(chipItem => chipItem.name === input);
+
+    console.log(this.state);
+
+    if (!input) {
+      return;
+    }
+
     if (isIncluded) {
       // This event.preventDefault prevents the form from submitting
       // if the user tries to create 2 chips of the same name
@@ -133,6 +140,7 @@ class MultiSelect extends Component {
   }
 
   handleInputChange(e) {
+    console.log('input change');
     this.setState({ input: e, isExpanded: true });
   }
 
