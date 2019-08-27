@@ -2563,6 +2563,9 @@ class CredentialSerializer(BaseSerializer):
                 'url': parent.content_object.get_absolute_url(self.context.get('request')),
             })
 
+        if obj.kubernetes:
+            summary_dict['kubernetes'] = True
+
         return summary_dict
 
     def get_validation_exclusions(self, obj=None):
