@@ -1,7 +1,8 @@
-function AddContainerGroupController($state, models, strings, i18n, CredTypesList) {
+function AddContainerGroupController($scope, $state, models, strings, i18n, CredTypesList) {
   const vm = this || {};
   const {
     instanceGroup,
+    credential
   } = models;
 
 
@@ -10,37 +11,37 @@ function AddContainerGroupController($state, models, strings, i18n, CredTypesLis
   vm.panelTitle = strings.get('state.ADD_CONTAINER_GROUP_BREADCRUMB_LABEL')
   vm.lookUpTitle = strings.get('credential.LOOK_UP_TITLE')
   vm.form = instanceGroup.createFormSchema('post')
-  console.log(vm.form, 'form')
+
   vm.form.credential = {
     type: 'field',
-    label: i18n._('Credential Type'),
+    label: i18n._('Credential'),
     id: 'credential'
   };
   vm.form.credential._placeholder = strings.get('credential.CREDENTIAL_TYPE_PLACEHOLDER')
-  vm.form.credential._route = "instanceGroups.addContainerGroup.credentialType"
-  vm.form.credential._model = instanceGroup
-  vm.form.credential._resource = 'credential_types';
+  vm.form.credential._route = "instanceGroups.addContainerGroup.credentials"
+  vm.form.credential._model = credential
+  vm.form.credential._resource = 'credential';
   vm.form.credential.required = true
   vm.panelTitle = strings.get('credential.PANEL_TITLE');
-  // vm.credTypes_dataset = CredTypesList.data;
-  // vm.credTypes = CredTypesList.data.results;
-  // vm.list = {
-  //   name: 'credential_types',
-  //   iterator: 'add_credential_type',
-  //   basePath: `/api/v2/credential_types/`
-  // };
 
+
+  $scope.$watch('credential', () => {
+    if ($scope.credential) {
+      console.log('watch', $scope.credential)
+      vm.form.credential._idFromModal= $scope.credential;
+      }
+  });
   vm.form.save = (data) => {
-    console.log(vm, 'selected save');
-    console.log(data, 'data');
-    if (vm.selectedRow) {
-      return instanceGroup.http.post(config);
-    }
-    $state.go('instanceGroups.addContainerGroup')
+    console.log(data, 'save data')
+    return instanceGroup.request('post', { data: data });
+
+    // $state.go('instanceGroups.addContainerGroup')
   };
 }
 
+
 AddContainerGroupController.$inject = [
+  '$scope',
   '$state',
   'resolvedModels',
   'InstanceGroupsStrings',

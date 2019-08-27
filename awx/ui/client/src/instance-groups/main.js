@@ -4,7 +4,6 @@ import {
 import CapacityAdjuster from './capacity-adjuster/capacity-adjuster.directive';
 import AddContainerGroup from './container-groups/add-container-group.view.html'
 import AddContainerGroupController from './container-groups/add-container-group.controller'
-import CredentialModalTemplate from './container-groups/credential-type-modal.partial.html'
 import CapacityBar from './capacity-bar/capacity-bar.directive';
 import instanceGroupsMultiselect from '../shared/instance-groups-multiselect/instance-groups.directive';
 import instanceGroupsModal from '../shared/instance-groups-multiselect/instance-groups-modal/instance-groups-modal.directive';
@@ -36,37 +35,38 @@ import AddController from '/Users/acorey/Ansible/awx/awx/ui/client/features/appl
 
 const MODULE_NAME = 'instanceGroups';
 
-function InstanceGroupsResolve($q, $stateParams, InstanceGroup, Instance, Organization, ProcessErrors, strings) {
+function InstanceGroupsResolve($q, $stateParams, InstanceGroup, Credential, Instance, ProcessErrors, strings) {
     const instanceGroupId = $stateParams.instance_group_id;
     const instanceId = $stateParams.instance_id;
     let promises = {};
 
     if (!instanceGroupId && !instanceId) {
         promises.instanceGroup = new InstanceGroup(['get', 'options']);
+        promises.credential = new Credential(['get', 'options']);
         return $q.all(promises);
     }
 
     if (instanceGroupId && instanceId) {
         promises.instance = new Instance(['get', 'options'], [instanceId, instanceId])
-            .then((instance) => instance.extend('get', 'jobs', {
-                params: {
-                    page_size: "10",
-                    order_by: "-finished"
-                }
-            }));
-        return $q.all(promises);
-    }
-
-    promises.instanceGroup = new InstanceGroup(['get', 'options'], [instanceGroupId, instanceGroupId])
-        .then((instanceGroup) => instanceGroup.extend('get', 'jobs', {
+        .then((instance) => instance.extend('get', 'jobs', {
             params: {
                 page_size: "10",
                 order_by: "-finished"
             }
-        }))
-        .then((instanceGroup) => instanceGroup.extend('get', 'instances'));
+        }));
+        return $q.all(promises);
+    }
 
-    promises.organization = new Organization();
+    promises.instanceGroup = new InstanceGroup(['get', 'options'], [instanceGroupId, instanceGroupId])
+    .then((instanceGroup) => instanceGroup.extend('get', 'jobs', {
+        params: {
+            page_size: "10",
+            order_by: "-finished"
+        }
+    }))
+    .then((instanceGroup) => instanceGroup.extend('get', 'instances'));
+
+    promises.credential = new Credential();
 
     return $q.all(promises)
         .then(models => models)
@@ -90,8 +90,8 @@ InstanceGroupsResolve.$inject = [
     '$q',
     '$stateParams',
     'InstanceGroupModel',
+    'CredentialModel',
     'InstanceModel',
-    'OrganizationModel',
     'ProcessErrors',
     'InstanceGroupsStrings'
 ];
@@ -186,12 +186,10 @@ function InstanceGroupsRun($stateExtender, strings, Rest) {
             resolvedModels: InstanceGroupsResolve,
             CredTypesList: ['Rest', 'GetBasePath', (Rest, GetBasePath) => {
                 const params = {
-                    namespace: 'kubernetes_bearer_token'
+                    credential_type: 15
                 };
-                Rest.setUrl(`${GetBasePath('credential_types')}`)
-                return Rest.get({
-                    params
-                })
+                Rest.setUrl(`${GetBasePath('credentials')}`)
+                return Rest.get({params})
             }]
         },
         ncyBreadcrumb: {
@@ -200,36 +198,35 @@ function InstanceGroupsRun($stateExtender, strings, Rest) {
     });
 
     $stateExtender.addState({
-        name: 'instanceGroups.addContainerGroup.credentialType',
-        url: '/credential_type?selected',
+        name: 'instanceGroups.addContainerGroup.credentials',
+        url: '/credential?selected',
         searchPrefix: 'container_group',
         params: {
-            credential_type_search: {
+            credential_search: {
                 value: {
                     page_size: 5,
                     order_by: 'name',
-                    namespace: 'kubernetes_bearer_token'
+                    credential_type: 15
                 },
                 dynamic: true,
                 squash: ''
             }
         },
         data: {
-            basePath: 'credential_types',
+            basePath: 'credentials',
             formChildState: true
         },
         ncyBreadcrumb: {
             skip: true
         },
         views: {
-            'credentialType@instanceGroups.addContainerGroup': {
+            'credentials@instanceGroups.addContainerGroup': {
                 templateProvider: (ListDefinition, generateList) => {
                     const html = generateList.build({
                         mode: 'lookup',
                         list: ListDefinition,
                         input_type: 'radio'
                     });
-                    console.log(html, 'views')
                     return `<lookup-modal>${html}</lookup-modal>`;
                 }
             }
@@ -238,7 +235,7 @@ function InstanceGroupsRun($stateExtender, strings, Rest) {
             ListDefinition: ['CredentialTypesList', list => list],
             Dataset: ['ListDefinition', 'QuerySet', '$stateParams', 'GetBasePath',
                 (list, qs, $stateParams, GetBasePath) => qs.search(
-                    GetBasePath('credential_types'),
+                    GetBasePath('credentials'),
                     $stateParams[`${list.iterator}_search`]
                 )
             ]

@@ -49,6 +49,7 @@ function AtInputLookupController (baseInputController, $q, $state) {
     };
 
     vm.lookup = () => {
+        console.log(scope, 'here')
         const params = {};
 
         if (scope.state._value && scope.state._isValid) {
@@ -88,20 +89,17 @@ function AtInputLookupController (baseInputController, $q, $state) {
             scope.state._value = null;
             return vm.check({ isValid: true });
         }
-
         searchParams = searchParams || { [search.key]: scope.state._displayValue };
 
         return model.search(searchParams, search.config)
             .then(found => {
                 if (!found) {
                     vm.reset();
-
                     return;
                 }
-
                 scope[scope.state._resource] = model.get('id');
                 scope.state._value = model.get('id');
-                scope.state._displayValue = model.get('name');
+                scope.state._displayValue = model.get('name') ;
                 scope.state._idFromModal = undefined;
             })
             .catch(() => vm.reset())

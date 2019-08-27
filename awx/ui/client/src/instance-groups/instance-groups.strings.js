@@ -67,8 +67,8 @@ function InstanceGroupsStrings(BaseString) {
     };
     ns.credential = {
         PANEL_TITLE: t.s('Add Container Group'),
-        LOOK_UP_TITLE: t.s('Add Credential Type'),
-        CREDENTIAL_TYPE_PLACEHOLDER: t.s('SELECT AN ORGANIZATION')
+        LOOK_UP_TITLE: t.s('Add Credential'),
+        CREDENTIAL_TYPE_PLACEHOLDER: t.s('SELECT A CREDENTIAL')
     }
 }
 
