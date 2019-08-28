@@ -28,9 +28,6 @@ import InstanceGroupsStrings from './instance-groups.strings';
 
 import instanceGroupJobsRoute from '~features/jobs/routes/instanceGroupJobs.route.js';
 import instanceJobsRoute from '~features/jobs/routes/instanceJobs.route.js';
-const addEditTemplate = require('~features/applications/add-edit-applications.view.html');
-import AddController from '/Users/acorey/Ansible/awx/awx/ui/client/features/applications/add-applications.controller';
-
 
 
 const MODULE_NAME = 'instanceGroups';
@@ -232,7 +229,7 @@ function InstanceGroupsRun($stateExtender, strings, Rest) {
             }
         },
         resolve: {
-            ListDefinition: ['CredentialTypesList', list => list],
+            ListDefinition: ['CredentialList', list => list],
             Dataset: ['ListDefinition', 'QuerySet', '$stateParams', 'GetBasePath', (list, qs, $stateParams, GetBasePath) => {
                 const params = {
                     // order_by: 'name',

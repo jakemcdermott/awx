@@ -38,11 +38,11 @@ function AtInputLookupController (baseInputController, $q, $state) {
         // hits save to close the modal.  This won't get triggered when the user types in
         // a value in the input.
         scope.$watch('state._idFromModal', () => {
-            console.log(scope, '$directive watch')
+            console.log(scope, '$directive watch');
             if (scope.state._idFromModal &&
                 (scope.state._idFromModal !== scope.state._value)
             ) {
-                console.log(scope, '$directive watch if')
+                console.log(scope, '$directive watch if');
 
                 vm.search({ id: scope.state._idFromModal });
             }
@@ -55,10 +55,10 @@ function AtInputLookupController (baseInputController, $q, $state) {
         const params = {};
 
         if (scope.state._value && scope.state._isValid) {
-            console.log(scope, 'here')
             params.selected = scope.state._value;
         }
 
+        console.log(scope, 'lookup clicked');
         $state.go(scope.state._route, params);
     };
 
@@ -83,7 +83,7 @@ function AtInputLookupController (baseInputController, $q, $state) {
     };
 
     vm.search = (searchParams) => {
-        console.log('search')
+        console.log('search');
         scope.state._touched = true;
 
         if (!scope.state._required &&
@@ -103,7 +103,7 @@ function AtInputLookupController (baseInputController, $q, $state) {
                 }
                 scope[scope.state._resource] = model.get('id');
                 scope.state._value = model.get('id');
-                scope.state._displayValue = model.get('name') ;
+                scope.state._displayValue = model.get('name');
                 scope.state._idFromModal = undefined;
             })
             .catch(() => vm.reset())

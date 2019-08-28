@@ -26,12 +26,13 @@ function AddContainerGroupController($scope, $state, models, strings, i18n, Cred
   vm.panelTitle = strings.get('credential.PANEL_TITLE');
 
 
-  $scope.$watch('credentials', () => {
-    console.log('watch', $scope)
-    if ($scope.credentials) {
+  $scope.$watch('credential', (newValue, oldValue, _scope) => {
+    console.log('watch new', newValue);
+    console.log('watch old', oldValue);
+    if ($scope.credential) {
       vm.form.credential._idFromModal= $scope.credential;
       }
-  });
+  }, true);
   vm.form.save = (data) => {
     console.log(data, 'save data')
     return instanceGroup.request('post', { data: data });
