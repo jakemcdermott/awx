@@ -185,11 +185,12 @@ function InstanceGroupsRun($stateExtender, strings, Rest) {
         resolve: {
             resolvedModels: InstanceGroupsResolve,
             CredTypesList: ['Rest', 'GetBasePath', (Rest, GetBasePath) => {
-                const params = {
-                    credential_type: 15
-                };
-                Rest.setUrl(`${GetBasePath('credentials')}`)
-                return Rest.get({params})
+                // const params = {
+                //     order_by: 'name',
+                //     page_size: 5
+                // };
+                // Rest.setUrl(`${GetBasePath('credentials')}`)
+                // return Rest.get({params})
             }]
         },
         ncyBreadcrumb: {
@@ -200,13 +201,12 @@ function InstanceGroupsRun($stateExtender, strings, Rest) {
     $stateExtender.addState({
         name: 'instanceGroups.addContainerGroup.credentials',
         url: '/credential?selected',
-        searchPrefix: 'container_group',
+        searchPrefix: 'credential',
         params: {
             credential_search: {
                 value: {
-                    page_size: 5,
                     order_by: 'name',
-                    credential_type: 15
+                    page_size: 5,
                 },
                 dynamic: true,
                 squash: ''
@@ -233,12 +233,19 @@ function InstanceGroupsRun($stateExtender, strings, Rest) {
         },
         resolve: {
             ListDefinition: ['CredentialTypesList', list => list],
-            Dataset: ['ListDefinition', 'QuerySet', '$stateParams', 'GetBasePath',
-                (list, qs, $stateParams, GetBasePath) => qs.search(
-                    GetBasePath('credentials'),
+            Dataset: ['ListDefinition', 'QuerySet', '$stateParams', 'GetBasePath', (list, qs, $stateParams, GetBasePath) => {
+                const params = {
+                    // order_by: 'name',
+                    credential_type__kind: 'kubernetes',
+                    // page_size: 5
+                };
+                console.log($stateParams, list, 'state params')
+                const searchPath = GetBasePath('credentials');
+                return qs.search(
+                    searchPath, params,
                     $stateParams[`${list.iterator}_search`]
                 )
-            ]
+            }]
         },
         onExit ($state) {
             if ($state.transition) {

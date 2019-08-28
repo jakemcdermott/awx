@@ -1,11 +1,11 @@
-<div ui-view="credentials"></div>
 <at-panel>
   <at-panel-heading title="{{:: vm.panelTitle }}"></at-panel-heading>
+  <div ui-view="credentials"></div>
   <at-panel-body>
     <at-form state="vm.form" autocomplete="off">
       <at-input-text col="4" tab="1" state="vm.form.name"></at-input-text>
       <!-- <at-input-text col="4" tab="1" state="vm.form.description"></at-input-text> -->
-      <at-input-lookup col="4" tab="3" state="vm.form.credential" id="containter_groups_credential"></at-input-lookup >
+      <at-input-lookup col="4" tab="3" state="vm.form.credential" id="containter_groups_credential"></at-input-lookup>
       <!-- <at-code-mirror
         state="vm.form.credential"
         class="JobResults-resultRow">

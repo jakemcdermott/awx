@@ -74,13 +74,14 @@ export default ['templateUrl', 'i18n', function(templateUrl, i18n) {
                 }
             }
 
-            $scope.saveForm = function() {
+            $scope.saveForm = function () {
                 eventService.remove(listeners);
                 let list = $scope.list;
                 if($scope.currentSelection.name !== null) {
                     $scope.$parent[`${list.iterator}_name`] = $scope.currentSelection.name;
                 }
                 $scope.$parent[list.iterator] = $scope.currentSelection.id;
+                console.log($scope,  'save modal')
                 $state.go('^');
             };
 
@@ -89,7 +90,8 @@ export default ['templateUrl', 'i18n', function(templateUrl, i18n) {
                 $state.go('^');
             };
 
-            $scope.toggle_row = function(selectedRow) {
+            $scope.toggle_row = function (selectedRow) {
+                console.log('toggle row', selectedRow)
                 let list = $scope.list;
                 let count = 0;
                 $scope[list.name].forEach(function(row) {

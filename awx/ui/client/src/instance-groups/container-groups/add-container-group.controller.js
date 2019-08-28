@@ -17,17 +17,18 @@ function AddContainerGroupController($scope, $state, models, strings, i18n, Cred
     label: i18n._('Credential'),
     id: 'credential'
   };
-  vm.form.credential._placeholder = strings.get('credential.CREDENTIAL_TYPE_PLACEHOLDER')
+  vm.form.credential._resource = 'credential';
   vm.form.credential._route = "instanceGroups.addContainerGroup.credentials"
   vm.form.credential._model = credential
-  vm.form.credential._resource = 'credential';
+  vm.form.credential._placeholder = strings.get('credential.CREDENTIAL_TYPE_PLACEHOLDER')
   vm.form.credential.required = true
+
   vm.panelTitle = strings.get('credential.PANEL_TITLE');
 
 
-  $scope.$watch('credential', () => {
-    if ($scope.credential) {
-      console.log('watch', $scope.credential)
+  $scope.$watch('credentials', () => {
+    console.log('watch', $scope)
+    if ($scope.credentials) {
       vm.form.credential._idFromModal= $scope.credential;
       }
   });
