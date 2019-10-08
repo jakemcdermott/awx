@@ -42,6 +42,16 @@ class TimingMiddleware(threading.local, MiddlewareMixin):
             self.prof = cProfile.Profile()
             self.prof.enable()
 
+        user = getattr(request, 'user', None)
+        user_pk = getattr(user, 'pk', None)
+        logger.debug({
+            'user': user_pk,
+            'remote_address': request.META['REMOTE_ADDR'],
+            'request_method': request.method,
+            'request_path': request.get_full_path(),
+            'request_body': request.body,
+        })
+
     def process_response(self, request, response):
         if not hasattr(self, 'start_time'):  # some tools may not invoke process_request
             return response
