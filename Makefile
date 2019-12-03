@@ -416,7 +416,7 @@ test_unit:
 	@if [ "$(VENV_BASE)" ]; then \
 		. $(VENV_BASE)/awx/bin/activate; \
 	fi; \
-	py.test awx/main/tests/unit awx/conf/tests/unit awx/sso/tests/unit
+	py.test awx/main/tests/functional/api/test_credential*
 
 # Run all API unit tests with coverage enabled.
 test_coverage:

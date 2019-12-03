@@ -43,6 +43,7 @@ class ModelAccessPermission(permissions.BasePermission):
         return check_user_access(request.user, view.model, 'read', obj)
 
     def check_post_permissions(self, request, view, obj=None):
+        import sdb; sdb.set_trace()
         if hasattr(view, 'parent_model'):
             parent_obj = view.get_parent_object()
             if not check_user_access(request.user, view.parent_model, 'read',
