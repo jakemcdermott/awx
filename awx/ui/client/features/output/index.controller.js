@@ -1,4 +1,5 @@
-/* eslint camelcase: 0 */
+/* eslint-disable */
+
 import {
     EVENT_START_PLAY,
     EVENT_START_TASK,
@@ -703,6 +704,13 @@ function reloadState (params) {
     return $state.transitionTo($state.current, params, { inherit: false, location: 'replace' });
 }
 
+
+function testDebug () {
+    console.log(stream.state);
+    console.log(stream.counters);
+}
+
+
 //
 // Debug Mode
 //
@@ -766,7 +774,7 @@ function OutputIndexController (
     vm.togglePanelExpand = togglePanelExpand;
 
     // Stdout Navigation
-    vm.menu = { last: menuLast, first, down, up, clear };
+    vm.menu = { last: menuLast, first, down, up: testDebug, clear };
     vm.isMenuCollapsed = false;
     vm.isFollowing = false;
     vm.toggleCollapseAll = toggleCollapseAll;

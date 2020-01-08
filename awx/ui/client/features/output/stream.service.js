@@ -163,6 +163,7 @@ function OutputStream ($q) {
     };
 
     this.pushJobEvent = data => {
+        console.log('pushJobEvent');
         this.lag++;
 
         this.chain = this.chain

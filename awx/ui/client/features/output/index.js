@@ -131,6 +131,8 @@ function resolveWebSocketConnection ($stateParams, SocketService) {
             }
         }
     };
+    console.log('resolveWebSocketConnection');
+    console.log(state);
 
     SocketService.addStateResolve(state, id);
 }

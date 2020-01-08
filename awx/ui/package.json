@@ -6,8 +6,8 @@
     "url": "https://github.com/ansible/awx"
   },
   "config": {
-    "django_port": "8043",
-    "django_host": "localhost"
+    "django_port": "443",
+    "django_host": "hostname-or-ip-of-your-prod-server"
   },
   "engines": {
     "node": "^8.11.2",

@@ -1,8 +1,5 @@
-/*************************************************
- * Copyright (c) 2016 Ansible, Inc.
- *
- * All Rights Reserved
- *************************************************/
+ /* eslint-disable */
+
 import ReconnectingWebSocket from 'reconnectingwebsocket';
 export default
 ['$rootScope', '$location', '$log','$state', '$q', 'i18n', 'GetBasePath', 'Rest', '$cookies',
@@ -158,6 +155,7 @@ export default
                     // ex: 'ws-jobs'
                     str = `ws-${data.group_name}`;
                 }
+                console.log(`socketSerice broadcasting to ${str}`);
                 $rootScope.$broadcast(str, data);
             },
             disconnect: function(){
