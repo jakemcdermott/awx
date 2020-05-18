@@ -29,3 +29,4 @@ make init
 
 mkdir -p /awx_devel/awx/public/static
 mkdir -p /awx_devel/awx/ui/static
+mkdir -p /awx_devel/awx/ui_next/build/static
