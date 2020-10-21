@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useHistory } from 'react-router-dom';
 import { withI18n } from '@lingui/react';
 import { t } from '@lingui/macro';
 import { Card, PageSection } from '@patternfly/react-core';
@@ -32,7 +32,7 @@ const QS_CONFIG = getQSConfig('template', {
 
 function TemplateList({ i18n }) {
   const location = useLocation();
-
+  const history = useHistory();
   const [selected, setSelected] = useState([]);
 
   const {
@@ -139,15 +139,15 @@ function TemplateList({ i18n }) {
 
   if (canAddJT) {
     addButtonOptions.push({
-      label: i18n._(t`Job Template`),
-      url: `/templates/job_template/add/`,
+      title: i18n._(t`Add Job Template`),
+      onAdd: () => history.push(`/templates/job_template/add/`),
     });
   }
 
   if (canAddWFJT) {
     addButtonOptions.push({
-      label: i18n._(t`Workflow Template`),
-      url: `/templates/workflow_job_template/add/`,
+      title: i18n._(t`Add Workflow Template`),
+      onAdd: () => history.push(`/templates/workflow_job_template/add/`),
     });
   }
 

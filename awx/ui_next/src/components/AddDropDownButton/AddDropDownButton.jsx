@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, Fragment } from 'react';
-import { Link } from 'react-router-dom';
 import { withI18n } from '@lingui/react';
 import { t } from '@lingui/macro';
 import PropTypes from 'prop-types';
@@ -34,8 +33,12 @@ function AddDropDownButton({ dropdownItems, i18n }) {
     return (
       <Fragment>
         {dropdownItems.map(item => (
-          <DropdownItem key={item.url} component={Link} to={item.url}>
-            {toTitleCase(`${i18n._(t`Add`)} ${item.label}`)}
+          <DropdownItem
+            key={item.title}
+            aria-label={item.title}
+            onClick={item.onAdd}
+          >
+            {toTitleCase(`${item.title}`)}
           </DropdownItem>
         ))}
       </Fragment>
@@ -50,18 +53,20 @@ function AddDropDownButton({ dropdownItems, i18n }) {
         position={DropdownPosition.right}
         toggle={
           <ToolbarAddButton
+            aria-label={i18n._(t`Add`)}
             showToggleIndicator
             onClick={() => setIsOpen(!isOpen)}
           />
         }
         dropdownItems={dropdownItems.map(item => (
-          <Link
+          <DropdownItem
+            aria-label={item.title}
             className="pf-c-dropdown__menu-item"
-            key={item.url}
-            to={item.url}
+            key={item.title}
+            onClick={item.onAdd}
           >
-            {item.label}
-          </Link>
+            {toTitleCase(`${item.title}`)}
+          </DropdownItem>
         ))}
       />
     </div>
@@ -71,8 +76,8 @@ function AddDropDownButton({ dropdownItems, i18n }) {
 AddDropDownButton.propTypes = {
   dropdownItems: PropTypes.arrayOf(
     PropTypes.shape({
-      label: PropTypes.string.isRequired,
-      url: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+      onAdd: PropTypes.func.isRequired,
     })
   ).isRequired,
 };

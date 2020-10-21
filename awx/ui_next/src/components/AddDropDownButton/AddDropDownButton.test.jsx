@@ -23,7 +23,7 @@ describe('<AddDropDownButton />', () => {
     );
     wrapper.find('button').simulate('click');
     expect(wrapper.find('Dropdown').prop('isOpen')).toEqual(true);
-    expect(wrapper.find('Link')).toHaveLength(dropdownItems.length);
+    expect(wrapper.find('DropdownItem')).toHaveLength(dropdownItems.length);
   });
 
   test('should close when button re-clicked', () => {

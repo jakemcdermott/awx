@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
-import { useLocation, useRouteMatch } from 'react-router-dom';
+import { useLocation, useRouteMatch, useHistory } from 'react-router-dom';
 import { withI18n } from '@lingui/react';
 import { t } from '@lingui/macro';
 import { Card, PageSection } from '@patternfly/react-core';
@@ -42,6 +42,7 @@ function modifyInstanceGroups(items = []) {
 }
 
 function InstanceGroupList({ i18n }) {
+  const history = useHistory();
   const location = useLocation();
   const match = useRouteMatch();
 
@@ -154,12 +155,12 @@ function InstanceGroupList({ i18n }) {
 
   const addButtonOptions = [
     {
-      label: i18n._(t`Instance group`),
-      url: '/instance_groups/add',
+      title: i18n._(t`Instance Group`),
+      onAdd: () => history.push('/instance_groups/add'),
     },
     {
-      label: i18n._(t`Container group`),
-      url: '/instance_groups/container_group/add',
+      title: i18n._(t`Container Group`),
+      onAdd: () => history.push('/instance_groups/container_group/add'),
     },
   ];
 

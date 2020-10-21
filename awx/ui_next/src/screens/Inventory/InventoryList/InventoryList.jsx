@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useLocation, useRouteMatch } from 'react-router-dom';
+import { useLocation, useRouteMatch, useHistory } from 'react-router-dom';
 import { withI18n } from '@lingui/react';
 import { t } from '@lingui/macro';
 import { Card, PageSection } from '@patternfly/react-core';
@@ -23,6 +23,7 @@ const QS_CONFIG = getQSConfig('inventory', {
 });
 
 function InventoryList({ i18n }) {
+  const history = useHistory();
   const location = useLocation();
   const match = useRouteMatch();
   const [selected, setSelected] = useState([]);
@@ -130,12 +131,12 @@ function InventoryList({ i18n }) {
       key="add"
       dropdownItems={[
         {
-          label: i18n._(t`Inventory`),
-          url: `${match.url}/inventory/add/`,
+          onAdd: () => history.push(`${match.url}/inventory/add/`),
+          title: i18n._(t`Add Inventory`),
         },
         {
-          label: i18n._(t`Smart Inventory`),
-          url: `${match.url}/smart_inventory/add/`,
+          title: i18n._(t`Add Smart Inventory`),
+          onAdd: () => history.push(`${match.url}/smart_inventory/add/`),
         },
       ]}
     />

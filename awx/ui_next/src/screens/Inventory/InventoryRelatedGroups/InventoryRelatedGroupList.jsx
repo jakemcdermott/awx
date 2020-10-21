@@ -11,7 +11,7 @@ import useSelected from '../../../util/useSelected';
 import DataListToolbar from '../../../components/DataListToolbar';
 import PaginatedDataList from '../../../components/PaginatedDataList';
 import InventoryGroupRelatedGroupListItem from './InventoryRelatedGroupListItem';
-import AddDropdown from '../shared/AddDropdown';
+import AddDropDownButton from '../../../components/AddDropDownButton';
 import AdHocCommands from '../../../components/AdHocCommands/AdHocCommands';
 import AssociateModal from '../../../components/AssociateModal';
 import DisassociateButton from '../../../components/DisassociateButton';
@@ -91,20 +91,18 @@ function InventoryRelatedGroupList({ i18n }) {
     addButtonOptions.push(
       {
         onAdd: () => setIsModalOpen(true),
-        title: i18n._(t`Add existing group`),
-        label: i18n._(t`group`),
-        key: 'existing',
+        title: i18n._(t`Add Existing Group`),
       },
       {
         onAdd: () => history.push(addFormUrl),
-        title: i18n._(t`Add new group`),
-        label: i18n._(t`group`),
-        key: 'new',
+        title: i18n._(t`Add New Group`),
       }
     );
   }
 
-  const addButton = <AddDropdown key="add" dropdownItems={addButtonOptions} />;
+  const addButton = (
+    <AddDropDownButton key="add" dropdownItems={addButtonOptions} />
+  );
 
   return (
     <>
@@ -175,13 +173,7 @@ function InventoryRelatedGroupList({ i18n }) {
         )}
         emptyStateControls={
           canAdd && (
-            <AddDropdown
-              onAddExisting={() => setIsModalOpen(true)}
-              onAddNew={() => history.push(addFormUrl)}
-              newTitle={i18n._(t`Add new group`)}
-              existingTitle={i18n._(t`Add existing group`)}
-              label={i18n._(t`group`)}
-            />
+            <AddDropDownButton key="add" dropdownItems={addButtonOptions} />
           )
         }
       />

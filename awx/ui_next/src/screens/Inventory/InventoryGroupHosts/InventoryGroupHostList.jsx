@@ -18,7 +18,7 @@ import AssociateModal from '../../../components/AssociateModal';
 import DisassociateButton from '../../../components/DisassociateButton';
 import AdHocCommands from '../../../components/AdHocCommands/AdHocCommands';
 import InventoryGroupHostListItem from './InventoryGroupHostListItem';
-import AddDropdown from '../shared/AddDropdown';
+import AddDropDownButton from '../../../components/AddDropDownButton';
 
 const QS_CONFIG = getQSConfig('host', {
   page: 1,
@@ -149,20 +149,18 @@ function InventoryGroupHostList({ i18n }) {
     addButtonOptions.push(
       {
         onAdd: () => setIsModalOpen(true),
-        title: i18n._(t`Add existing host`),
-        label: i18n._(t`host`),
-        key: 'existing',
+        title: i18n._(t`Add Existing Host`),
       },
       {
         onAdd: () => history.push(addFormUrl),
-        title: i18n._(t`Add new host`),
-        label: i18n._(t`host`),
-        key: 'new',
+        title: i18n._(t`Add New Host`),
       }
     );
   }
 
-  const addButton = <AddDropdown key="add" dropdownItems={addButtonOptions} />;
+  const addButton = (
+    <AddDropDownButton key="add" dropdownItems={addButtonOptions} />
+  );
   return (
     <>
       <PaginatedDataList
