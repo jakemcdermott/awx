@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { withI18n } from '@lingui/react';
 import { t } from '@lingui/macro';
-import { useParams, useLocation, useHistory } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 
 import { GroupsAPI, InventoriesAPI } from '../../../api';
 import useRequest from '../../../util/useRequest';
@@ -16,6 +16,9 @@ import AdHocCommands from '../../../components/AdHocCommands/AdHocCommands';
 import AssociateModal from '../../../components/AssociateModal';
 import DisassociateButton from '../../../components/DisassociateButton';
 
+import { Link } from 'react-router-dom';
+import { DropdownItem } from '@patternfly/react-core';
+
 const QS_CONFIG = getQSConfig('group', {
   page: 1,
   page_size: 20,
@@ -25,7 +28,6 @@ function InventoryRelatedGroupList({ i18n }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { id: inventoryId, groupId } = useParams();
   const location = useLocation();
-  const history = useHistory();
   const {
     request: fetchRelated,
     result: {
@@ -84,24 +86,28 @@ function InventoryRelatedGroupList({ i18n }) {
     groups
   );
 
-  const addFormUrl = `/home`;
-  const addButtonOptions = [];
-
-  if (canAdd) {
-    addButtonOptions.push(
-      {
-        onAdd: () => setIsModalOpen(true),
-        title: i18n._(t`Add Existing Group`),
-      },
-      {
-        onAdd: () => history.push(addFormUrl),
-        title: i18n._(t`Add New Group`),
-      }
-    );
-  }
-
   const addButton = (
-    <AddDropDownButton key="add" dropdownItems={addButtonOptions} />
+    <AddDropDownButton
+      key="add"
+      dropdownItems={
+        canAdd
+          ? [
+              <DropdownItem
+                onClick={() => setIsModalOpen(true)}
+                key="add-inventory"
+                aria-label={i18n._(t`Add Existing Group`)}
+              >
+                {i18n._(t`Add Existing Group`)}
+              </DropdownItem>,
+              <DropdownItem
+                key="add-smart-inventory"
+                aria-label={i18n._(t`Add New Group`)}
+                component={<Link to="/home">{i18n._(t`Add New Group`)}</Link>}
+              />,
+            ]
+          : []
+      }
+    />
   );
 
   return (
@@ -171,11 +177,7 @@ function InventoryRelatedGroupList({ i18n }) {
             onSelect={() => handleSelect(o)}
           />
         )}
-        emptyStateControls={
-          canAdd && (
-            <AddDropDownButton key="add" dropdownItems={addButtonOptions} />
-          )
-        }
+        emptyStateControls={addButton}
       />
       {isModalOpen && (
         <AssociateModal

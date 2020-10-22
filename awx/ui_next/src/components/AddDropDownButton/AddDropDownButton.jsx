@@ -1,14 +1,8 @@
 import React, { useState, useRef, useEffect, Fragment } from 'react';
 import { withI18n } from '@lingui/react';
 import { t } from '@lingui/macro';
-import PropTypes from 'prop-types';
-import {
-  Dropdown,
-  DropdownPosition,
-  DropdownItem,
-} from '@patternfly/react-core';
+import { Dropdown, DropdownPosition } from '@patternfly/react-core';
 import { ToolbarAddButton } from '../PaginatedDataList';
-import { toTitleCase } from '../../util/strings';
 import { useKebabifiedMenu } from '../../contexts/Kebabified';
 
 function AddDropDownButton({ dropdownItems, i18n }) {
@@ -30,19 +24,7 @@ function AddDropDownButton({ dropdownItems, i18n }) {
   }, [isKebabified]);
 
   if (isKebabified) {
-    return (
-      <Fragment>
-        {dropdownItems.map(item => (
-          <DropdownItem
-            key={item.title}
-            aria-label={item.title}
-            onClick={item.onAdd}
-          >
-            {toTitleCase(`${item.title}`)}
-          </DropdownItem>
-        ))}
-      </Fragment>
-    );
+    return <Fragment>{dropdownItems}</Fragment>;
   }
 
   return (
@@ -58,29 +40,11 @@ function AddDropDownButton({ dropdownItems, i18n }) {
             onClick={() => setIsOpen(!isOpen)}
           />
         }
-        dropdownItems={dropdownItems.map(item => (
-          <DropdownItem
-            aria-label={item.title}
-            className="pf-c-dropdown__menu-item"
-            key={item.title}
-            onClick={item.onAdd}
-          >
-            {toTitleCase(`${item.title}`)}
-          </DropdownItem>
-        ))}
+        dropdownItems={dropdownItems}
       />
     </div>
   );
 }
-
-AddDropDownButton.propTypes = {
-  dropdownItems: PropTypes.arrayOf(
-    PropTypes.shape({
-      title: PropTypes.string.isRequired,
-      onAdd: PropTypes.func.isRequired,
-    })
-  ).isRequired,
-};
 
 export { AddDropDownButton as _AddDropDownButton };
 export default withI18n()(AddDropDownButton);
