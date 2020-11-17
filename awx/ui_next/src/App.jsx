@@ -76,7 +76,7 @@ function App() {
 }
 
 export default () => (
-  <BrowserRouter basename="/next">
+  <BrowserRouter>
     <App />
   </BrowserRouter>
 );
